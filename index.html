@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obsidian Daily Note Forge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:          #0d0f14;
+      --bg2:         #12151c;
+      --bg3:         #181c26;
+      --surface:     #1e2330;
+      --surface2:    #252c3a;
+      --border:      #2a3147;
+      --border2:     #3a4460;
+      --accent:      #7c6af7;
+      --accent2:     #5b4de0;
+      --accent-glow: rgba(124,106,247,0.25);
+      --accent3:     #c084fc;
+      --gold:        #f0c060;
+      --green:       #4ade80;
+      --red:         #f87171;
+      --cyan:        #67e8f9;
+      --text:        #e8ecf5;
+      --text2:       #9aa3ba;
+      --text3:       #5c6482;
+      --radius:      14px;
+      --radius-sm:   8px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background grid ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -30%;
+      left: -10%;
+      width: 70vw;
+      height: 70vw;
+      background: radial-gradient(circle, rgba(124,106,247,0.07) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      grid-row: 1 / 3;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .sidebar-section {
+      padding: 16px 12px 8px;
+    }
+
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .nav-item.active {
+      background: var(--surface2);
+      color: var(--accent3);
+      border-color: var(--border2);
+    }
+
+    .nav-item .material-icons-round { font-size: 18px; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    .sidebar-stats {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .stat-label { font-size: 12px; color: var(--text3); }
+    .stat-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent3);
+      font-weight: 700;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .topbar-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+      transition: all 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+      border-color: var(--border2);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent2);
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .btn.primary:hover {
+      background: var(--accent2);
+      box-shadow: 0 0 30px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn.danger {
+      background: rgba(248,113,113,0.1);
+      border-color: rgba(248,113,113,0.3);
+      color: var(--red);
+    }
+
+    .btn.danger:hover {
+      background: rgba(248,113,113,0.2);
+    }
+
+    .btn .material-icons-round { font-size: 16px; }
+
+    /* ── Main content ── */
+    .main {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+
+    .panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+
+    .panel-icon {
+      color: var(--accent3);
+      font-size: 18px;
+    }
+
+    .panel-actions { margin-left: auto; display: flex; gap: 6px; }
+
+    .panel-body { padding: 18px; }
+
+    /* ── Input row ── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.6;
+    }
+
+    textarea.mono {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      min-height: 160px;
+    }
+
+    select option { background: var(--bg3); }
+
+    /* ── Mood selector ── */
+    .mood-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mood-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .mood-btn:hover { border-color: var(--border2); color: var(--text); }
+    .mood-btn.selected {
+      border-color: var(--accent);
+      background: rgba(124,106,247,0.15);
+      color: var(--accent3);
+    }
+
+    /* ── Tags ── */
+    .tags-input-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      min-height: 42px;
+      cursor: text;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .tags-input-wrapper:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .tag-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(124,106,247,0.15);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      color: var(--accent3);
+      font-size: 12px;
+      padding: 2px 8px;
+    }
+
+    .tag-chip .remove {
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.6;
+      line-height: 1;
+    }
+
+    .tag-chip .remove:hover { opacity: 1; }
+
+    .tags-real-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      min-width: 80px;
+      flex: 1;
+    }
+
+    /* ── Prompt customizer ── */
+    .prompt-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .prompt-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .preset-btn {
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ── Progress / log ── */
+    .log-container {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      max-height: 280px;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    .log-line { display: flex; gap: 8px; }
+    .log-time { color: var(--text3); flex-shrink: 0; }
+    .log-info { color: var(--cyan); }
+    .log-ok   { color: var(--green); }
+    .log-warn { color: var(--gold); }
+    .log-err  { color: var(--red); }
+
+    /* ── Output preview ── */
+    .output-preview {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.8;
+    }
+
+    .output-preview .md-h1 { color: var(--accent3); font-weight: 700; font-size: 14px; }
+    .output-preview .md-h2 { color: var(--cyan); font-weight: 700; }
+    .output-preview .md-h3 { color: var(--gold); }
+    .output-preview .md-tag { color: var(--accent); }
+    .output-preview .md-link { color: var(--cyan); text-decoration: underline; }
+    .output-preview .md-bold { color: var(--text); font-weight: 700; }
+
+    /* ── Status indicator ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      background: var(--bg3);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .progress-bar-wrapper {
+      flex: 1;
+      height: 4px;
+      background: var(--bg);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent3));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .progress-bar.indeterminate {
+      width: 40%;
+      animation: slide 1.4s ease-in-out infinite;
+    }
+
+    @keyframes slide {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    /* ── Cards grid ── */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 4px;
+    }
+
+    .card-icon .material-icons-round { font-size: 18px; }
+    .card-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-label { font-size: 12px; color: var(--text3); }
+
+    /* ── History panel ── */
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .history-item:hover { border-color: var(--border2); }
+
+    .history-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .history-meta { flex: 1; }
+    .history-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .history-sub { font-size: 11px; color: var(--text3); }
+    .history-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text3);
+      flex-shrink: 0;
+    }
+
+    /* ── Config section ── */
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      padding: 0 18px;
+      background: var(--bg3);
+    }
+
+    .tab {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab:hover { color: var(--text2); }
+    .tab.active { color: var(--accent3); border-bottom-color: var(--accent3); }
+    .tab .material-icons-round { font-size: 15px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Obsidian features ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .feature-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .feature-card:hover { border-color: var(--border2); background: var(--surface); }
+
+    .feature-card.enabled { border-color: var(--accent); background: rgba(124,106,247,0.08); }
+
+    .feature-card-icon {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .feature-card-icon .material-icons-round { font-size: 16px; }
+
+    .feature-card-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .feature-card-desc { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+
+    .toggle-switch {
+      position: relative;
+      width: 32px; height: 18px;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .toggle-switch input { display: none; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--text3);
+      top: 2px; left: 2px;
+      transition: all 0.2s;
+    }
+
+    input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent2); }
+    input:checked + .toggle-slider::before {
+      background: #fff;
+      transform: translateX(14px);
+    }
+
+    /* ── Snackbar ── */
+    .snackbar {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .snackbar.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .snackbar .material-icons-round { font-size: 18px; }
+    .snackbar.success { border-color: var(--green); }
+    .snackbar.success .material-icons-round { color: var(--green); }
+    .snackbar.error { border-color: var(--red); }
+    .snackbar.error .material-icons-round { color: var(--red); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .cards-row { grid-template-columns: repeat(2, 1fr); }
+      .config-grid { grid-template-columns: 1fr; }
+      .prompt-section { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Fade-in ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel { animation: fadeUp 0.4s ease both; }
+    .panel:nth-child(2) { animation-delay: 0.06s; }
+    .panel:nth-child(3) { animation-delay: 0.12s; }
+    .panel:nth-child(4) { animation-delay: 0.18s; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">⬡</div>
+        <div>
+          <div class="logo-text">NoteForge</div>
+          <div class="logo-sub">Obsidian + Ollama</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Workspace</div>
+      <div class="nav-item active" onclick="showTab('compose')">
+        <span class="material-icons-round">edit_note</span> Compose
+      </div>
+      <div class="nav-item" onclick="showTab('history')">
+        <span class="material-icons-round">history</span> Note History
+        <span class="nav-badge" id="hist-count">0</span>
+      </div>
+      <div class="nav-item" onclick="showTab('preview')">
+        <span class="material-icons-round">preview</span> Preview
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">System</div>
+      <div class="nav-item" onclick="showTab('config')">
+        <span class="material-icons-round">settings</span> Configuration
+      </div>
+      <div class="nav-item" onclick="showTab('obsidian')">
+        <span class="material-icons-round">hub</span> Obsidian Features
+      </div>
+      <div class="nav-item" onclick="showTab('logs')">
+        <span class="material-icons-round">terminal</span> Server Logs
+      </div>
+    </div>
+
+    <div class="sidebar-stats">
+      <div class="stat-row">
+        <span class="stat-label">Backend</span>
+        <span class="stat-val" id="be-status">
+          <span class="status-dot"></span> Online
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Model</span>
+        <span class="stat-val" id="model-name">llama3</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Vault</span>
+        <span class="stat-val" id="vault-name">~/vault</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Notes today</span>
+        <span class="stat-val" id="notes-today">0</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <span class="material-icons-round" style="color:var(--accent3)">auto_awesome</span>
+    <div>
+      <div class="topbar-title" id="page-title">Daily Note Compose</div>
+      <div class="topbar-date" id="page-date"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" onclick="checkBackend()">
+        <span class="material-icons-round">sensors</span> Ping
+      </button>
+      <button class="btn primary" onclick="generateNote()" id="gen-btn">
+        <span class="material-icons-round">send</span> Generate &amp; Send
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main class="main" id="main-area">
+
+    <!-- Stats cards -->
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-icon" style="background:rgba(124,106,247,0.15)">
+          <span class="material-icons-round" style="color:var(--accent3)">auto_stories</span>
+        </div>
+        <div class="card-num" id="stat-total">0</div>
+        <div class="card-label">Notes Generated</div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(74,222,128,0.1)">
+          <span class="material-icons-round" style="color:var(--green)">check_circle</span>
+        </div>
+        <div class="card-num" id="stat-sent">0</div>
+        <div class="card-label">Sent to Obsidian</div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(103,232,249,0.1)">
+          <span class="material-icons-round" style="color:var(--cyan)">account_tree</span>
+        </div>
+        <div class="card-num" id="stat-maps">0</div>
+        <div class="card-label">Mind Maps Created</div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(240,192,96,0.1)">
+          <span class="material-icons-round" style="color:var(--gold)">local_fire_department</span>
+        </div>
+        <div class="card-num" id="stat-streak">0</div>
+        <div class="card-label">Day Streak</div>
+      </div>
+    </div>
+
+    <!-- ── TAB: COMPOSE ── -->
+    <div id="tab-compose" class="tab-content active">
+
+      <!-- Entry panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">edit</span>
+          <span class="panel-title">Daily Entry</span>
+          <div class="panel-actions">
+            <button class="btn" onclick="clearForm()">
+              <span class="material-icons-round">clear_all</span> Clear
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+
+          <div class="input-grid">
+            <div class="field-group">
+              <label>Entry Title</label>
+              <input type="text" id="note-title" placeholder="Today's theme or headline..." />
+            </div>
+            <div class="field-group">
+              <label>Date</label>
+              <input type="text" id="note-date" placeholder="YYYY-MM-DD" />
+            </div>
+            <div class="field-group full">
+              <label>What happened today? (raw notes)</label>
+              <textarea id="note-body" placeholder="Dump your thoughts here — events, wins, blockers, ideas, observations, conversations, anything. The more detail, the richer the expanded note will be..."></textarea>
+            </div>
+            <div class="field-group">
+              <label>Energy Level (1–10)</label>
+              <input type="number" id="note-energy" min="1" max="10" placeholder="7" />
+            </div>
+            <div class="field-group">
+              <label>Focus Area</label>
+              <select id="note-focus">
+                <option value="">— Select —</option>
+                <option value="work">🏢 Work / Career</option>
+                <option value="personal">🌱 Personal Growth</option>
+                <option value="health">💪 Health & Fitness</option>
+                <option value="creative">🎨 Creative / Projects</option>
+                <option value="learning">📚 Learning / Study</option>
+                <option value="social">👥 Social / Relationships</option>
+                <option value="finance">💰 Finance</option>
+                <option value="mixed">🌀 Mixed / General</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-bottom:14px">
+            <label>Mood</label>
+            <div class="mood-row" id="mood-row">
+              <div class="mood-btn" data-mood="✨ Energized" onclick="selectMood(this)">✨ Energized</div>
+              <div class="mood-btn" data-mood="😌 Calm" onclick="selectMood(this)">😌 Calm</div>
+              <div class="mood-btn" data-mood="🔥 Focused" onclick="selectMood(this)">🔥 Focused</div>
+              <div class="mood-btn" data-mood="😴 Tired" onclick="selectMood(this)">😴 Tired</div>
+              <div class="mood-btn" data-mood="😤 Frustrated" onclick="selectMood(this)">😤 Frustrated</div>
+              <div class="mood-btn" data-mood="🌧 Anxious" onclick="selectMood(this)">🌧 Anxious</div>
+              <div class="mood-btn" data-mood="🎉 Excited" onclick="selectMood(this)">🎉 Excited</div>
+              <div class="mood-btn" data-mood="😶 Neutral" onclick="selectMood(this)">😶 Neutral</div>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-bottom:14px">
+            <label>Wins today (comma-separated or Enter to add)</label>
+            <textarea id="note-wins" placeholder="Shipped the login page, had a great 1:1, finished chapter 3..." style="min-height:60px"></textarea>
+          </div>
+
+          <div class="field-group" style="margin-bottom:14px">
+            <label>Blockers / Challenges</label>
+            <textarea id="note-blockers" placeholder="Stuck on the auth bug, didn't sleep well, distracted by..." style="min-height:60px"></textarea>
+          </div>
+
+          <div class="field-group" style="margin-bottom:14px">
+            <label>Tomorrow's intentions</label>
+            <textarea id="note-tomorrow" placeholder="What will you tackle first? Any commitments?" style="min-height:60px"></textarea>
+          </div>
+
+          <div class="field-group" style="margin-bottom:14px">
+            <label>Tags <span style="color:var(--text3);font-weight:400;text-transform:none">— press Enter or comma</span></label>
+            <div class="tags-input-wrapper" id="tags-wrapper" onclick="document.getElementById('tags-real-input').focus()">
+              <input type="text" class="tags-real-input" id="tags-real-input" placeholder="Add tag…" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Related Obsidian Notes to link (comma-separated)</label>
+            <input type="text" id="note-links" placeholder="[[Project Alpha]], [[Weekly Review]], [[Goal 2025]]..." />
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Prompt customizer -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">tune</span>
+          <span class="panel-title">AI Prompt Customizer</span>
+          <div class="panel-actions">
+            <button class="btn" onclick="resetPrompt()">
+              <span class="material-icons-round">restart_alt</span> Reset
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="prompt-presets">
+            <span style="font-size:11px;color:var(--text3);align-self:center;margin-right:4px">Presets:</span>
+            <button class="preset-btn" onclick="loadPreset('journal')">📓 Deep Journal</button>
+            <button class="preset-btn" onclick="loadPreset('dev')">💻 Dev Log</button>
+            <button class="preset-btn" onclick="loadPreset('executive')">📊 Executive</button>
+            <button class="preset-btn" onclick="loadPreset('stoic')">🏛 Stoic</button>
+            <button class="preset-btn" onclick="loadPreset('creative')">🎨 Creative</button>
+            <button class="preset-btn" onclick="loadPreset('minimal')">◻ Minimal</button>
+          </div>
+          <div class="prompt-section">
+            <div class="field-group full">
+              <label>System Prompt</label>
+              <textarea class="mono" id="system-prompt">You are a thoughtful daily note assistant that writes rich, detailed, and deeply reflective Obsidian vault notes in Markdown. When given raw daily entry data, you expand it into a comprehensive structured note that:
+
+1. Opens with a powerful one-sentence daily theme or insight
+2. Includes an executive summary paragraph
+3. Expands each raw note bullet into detailed paragraphs with reflection and context
+4. Identifies patterns, emotions, and underlying themes
+5. Draws connections to previous goals and longer-term trajectories
+6. Includes actionable insights and lessons learned
+7. Generates a "Key Quote of the Day" — something meaningful to remember
+8. Ends with a "Tomorrow's Focus" section with specific, actionable next steps
+9. Adds relevant Obsidian wikilinks [[like this]] for concepts and people mentioned
+10. Includes dataview-compatible frontmatter YAML with full metadata
+11. Generates a Mermaid mind map summarizing the day's themes
+12. Adds a Mermaid timeline for key events of the day
+13. Writes in the first person, warm and introspective
+14. Uses callout blocks for important insights: > [!insight], > [!warning], > [!tip]
+15. Formats the note so it's a pleasure to read and deeply useful to revisit
+
+The note should feel like a conversation with your future self. Make it long, detailed, and meaningful. Use headers, subheaders, bullet lists, bold text, and Mermaid diagrams. Minimum 600 words in the body.</textarea>
+            </div>
+            <div class="field-group">
+              <label>Tone</label>
+              <select id="prompt-tone">
+                <option value="reflective">Reflective &amp; introspective</option>
+                <option value="analytical">Analytical &amp; structured</option>
+                <option value="motivational">Motivational &amp; forward-looking</option>
+                <option value="journalistic">Journalistic &amp; objective</option>
+                <option value="stoic">Stoic &amp; philosophical</option>
+                <option value="casual">Casual &amp; conversational</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Note Length Target</label>
+              <select id="prompt-length">
+                <option value="medium">Medium (~400 words)</option>
+                <option value="long" selected>Long (~800 words)</option>
+                <option value="epic">Epic (~1500+ words)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Extra Instructions</label>
+              <textarea id="prompt-extra" placeholder="E.g. Always include a gratitude section. Reference my goal of shipping by Q2. Add a weekly reflection if it's Friday..." style="min-height:80px"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-compose -->
+
+    <!-- ── TAB: HISTORY ── -->
+    <div id="tab-history" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">history</span>
+          <span class="panel-title">Note History</span>
+          <div class="panel-actions">
+            <button class="btn danger" onclick="clearHistory()">
+              <span class="material-icons-round">delete_sweep</span> Clear
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="history-list" id="history-list">
+            <div style="color:var(--text3);font-size:13px;text-align:center;padding:24px">No notes yet — compose your first one!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: PREVIEW ── -->
+    <div id="tab-preview" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">description</span>
+          <span class="panel-title">Generated Note Preview</span>
+          <div class="panel-actions">
+            <button class="btn" onclick="copyPreview()">
+              <span class="material-icons-round">content_copy</span> Copy
+            </button>
+            <button class="btn" onclick="downloadPreview()">
+              <span class="material-icons-round">download</span> Download .md
+            </button>
+            <button class="btn primary" id="send-btn" onclick="sendToObsidian()" disabled>
+              <span class="material-icons-round">send</span> Send to Obsidian
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="output-preview" id="output-preview">
+            <span style="color:var(--text3)">Generate a note to see the preview here…</span>
+          </div>
+        </div>
+        <div class="status-bar">
+          <span id="progress-label" style="color:var(--text3)">Ready</span>
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <span id="word-count" style="font-family:'Space Mono',monospace;font-size:11px">0 words</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: CONFIG ── -->
+    <div id="tab-config" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">settings</span>
+          <span class="panel-title">Configuration</span>
+          <div class="panel-actions">
+            <button class="btn primary" onclick="saveConfig()">
+              <span class="material-icons-round">save</span> Save
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="config-grid">
+            <div class="field-group">
+              <label>Backend URL</label>
+              <input type="text" id="cfg-backend" value="http://localhost:5000" />
+            </div>
+            <div class="field-group">
+              <label>Ollama Host</label>
+              <input type="text" id="cfg-ollama" value="http://localhost:11434" />
+            </div>
+            <div class="field-group">
+              <label>Ollama Model</label>
+              <input type="text" id="cfg-model" value="llama3" />
+            </div>
+            <div class="field-group">
+              <label>Obsidian Vault Path</label>
+              <input type="text" id="cfg-vault" value="~/obsidian-vault" />
+            </div>
+            <div class="field-group">
+              <label>Daily Notes Folder</label>
+              <input type="text" id="cfg-folder" value="Daily Notes" />
+            </div>
+            <div class="field-group">
+              <label>Date Format</label>
+              <select id="cfg-dateformat">
+                <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+                <option value="DD-MM-YYYY">DD-MM-YYYY</option>
+                <option value="MM-DD-YYYY">MM-DD-YYYY</option>
+                <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Ollama Temperature</label>
+              <input type="number" id="cfg-temp" min="0" max="2" step="0.05" value="0.75" />
+            </div>
+            <div class="field-group">
+              <label>Max Tokens</label>
+              <input type="number" id="cfg-tokens" value="4096" />
+            </div>
+            <div class="field-group">
+              <label>Auto-open in Obsidian</label>
+              <select id="cfg-autoopen">
+                <option value="true">Yes — open after send</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: OBSIDIAN FEATURES ── -->
+    <div id="tab-obsidian" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">hub</span>
+          <span class="panel-title">Obsidian Feature Injections</span>
+        </div>
+        <div class="panel-body">
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Toggle which Obsidian-specific features the AI will include in generated notes. All enabled features are injected into the prompt automatically.</p>
+          <div class="feature-grid" id="feature-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: LOGS ── -->
+    <div id="tab-logs" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="material-icons-round panel-icon">terminal</span>
+          <span class="panel-title">Server Logs</span>
+          <div class="panel-actions">
+            <button class="btn" onclick="clearLogs()">
+              <span class="material-icons-round">delete</span> Clear
+            </button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="log-container" id="log-container">
+            <div class="log-line">
+              <span class="log-time">00:00:00</span>
+              <span class="log-info">[INFO]</span>
+              <span>NoteForge UI ready. Waiting for action.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Snackbar -->
+<div class="snackbar" id="snackbar">
+  <span class="material-icons-round" id="snack-icon">check_circle</span>
+  <span id="snack-msg">Done!</span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const state = {
+  notes: JSON.parse(localStorage.getItem('nf_notes') || '[]'),
+  config: JSON.parse(localStorage.getItem('nf_config') || '{}'),
+  stats: JSON.parse(localStorage.getItem('nf_stats') || '{"total":0,"sent":0,"maps":0,"streak":0}'),
+  lastGenerated: null,
+  tags: [],
+};
+
+// Default config
+const defaultConfig = {
+  backend: 'http://localhost:5000',
+  ollama: 'http://localhost:11434',
+  model: 'llama3',
+  vault: '~/obsidian-vault',
+  folder: 'Daily Notes',
+  dateformat: 'YYYY-MM-DD',
+  temp: 0.75,
+  tokens: 4096,
+  autoopen: 'true',
+};
+
+const obsidianFeatures = [
+  { id: 'mindmap',    icon: 'account_tree',    color: '#7c6af7', name: 'Mermaid Mind Map',     desc: 'Auto-generate a mindmap of the day\'s themes and connections', enabled: true },
+  { id: 'timeline',   icon: 'timeline',         color: '#67e8f9', name: 'Mermaid Timeline',     desc: 'Visual timeline of key events and milestones', enabled: true },
+  { id: 'dataview',   icon: 'table_chart',      color: '#4ade80', name: 'Dataview Frontmatter', desc: 'Full YAML frontmatter compatible with Obsidian Dataview plugin', enabled: true },
+  { id: 'callouts',   icon: 'tips_and_updates', color: '#f0c060', name: 'Callout Blocks',       desc: '[!insight], [!tip], [!warning] callout blocks', enabled: true },
+  { id: 'tasks',      icon: 'task_alt',         color: '#4ade80', name: 'Tasks Plugin',         desc: 'Generate tasks with due dates and priorities for tomorrow', enabled: true },
+  { id: 'wikilinks',  icon: 'link',             color: '#c084fc', name: 'Wiki Links',           desc: 'Auto-generate [[wikilinks]] for people, projects, and concepts', enabled: true },
+  { id: 'graph',      icon: 'bubble_chart',     color: '#67e8f9', name: 'Graph Tags',           desc: 'Add tags that improve Obsidian graph view clustering', enabled: true },
+  { id: 'kanban',     icon: 'view_kanban',      color: '#f0c060', name: 'Kanban Card',          desc: 'Embed a Kanban board snippet for today\'s tasks', enabled: false },
+  { id: 'periodic',   icon: 'event_repeat',     color: '#7c6af7', name: 'Periodic Notes',       desc: 'Add weekly/monthly review prompts if applicable', enabled: true },
+  { id: 'spaced',     icon: 'psychology',       color: '#c084fc', name: 'Spaced Repetition',    desc: 'Flag key learnings for Anki/flashcard review', enabled: false },
+  { id: 'breadcrumbs',icon: 'device_hub',       color: '#4ade80', name: 'Breadcrumbs',          desc: 'Add breadcrumb hierarchy metadata for note navigation', enabled: false },
+  { id: 'templater',  icon: 'auto_fix_high',    color: '#67e8f9', name: 'Templater Vars',       desc: 'Include Templater-compatible variable placeholders', enabled: false },
+];
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+(function init() {
+  const now = new Date();
+  document.getElementById('page-date').textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('note-date').value = now.toISOString().split('T')[0];
+
+  loadConfigToUI();
+  renderFeatureGrid();
+  renderHistory();
+  updateStats();
+  setupTagsInput();
+  log('info', 'NoteForge ready. Backend: ' + getConfig().backend);
+})();
+
+// ─────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────
+const tabTitles = {
+  compose: 'Daily Note Compose',
+  history: 'Note History',
+  preview: 'Generated Preview',
+  config:  'Configuration',
+  obsidian:'Obsidian Features',
+  logs:    'Server Logs',
+};
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(n => {
+    if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active');
+  });
+  document.getElementById('page-title').textContent = tabTitles[name] || name;
+}
+
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+function getConfig() {
+  return Object.assign({}, defaultConfig, state.config);
+}
+
+function loadConfigToUI() {
+  const c = getConfig();
+  document.getElementById('cfg-backend').value    = c.backend;
+  document.getElementById('cfg-ollama').value     = c.ollama;
+  document.getElementById('cfg-model').value      = c.model;
+  document.getElementById('cfg-vault').value      = c.vault;
+  document.getElementById('cfg-folder').value     = c.folder;
+  document.getElementById('cfg-dateformat').value = c.dateformat;
+  document.getElementById('cfg-temp').value       = c.temp;
+  document.getElementById('cfg-tokens').value     = c.tokens;
+  document.getElementById('cfg-autoopen').value   = c.autoopen;
+  document.getElementById('model-name').textContent = c.model;
+  document.getElementById('vault-name').textContent  = c.vault;
+}
+
+function saveConfig() {
+  state.config = {
+    backend: document.getElementById('cfg-backend').value,
+    ollama:  document.getElementById('cfg-ollama').value,
+    model:   document.getElementById('cfg-model').value,
+    vault:   document.getElementById('cfg-vault').value,
+    folder:  document.getElementById('cfg-folder').value,
+    dateformat: document.getElementById('cfg-dateformat').value,
+    temp:    parseFloat(document.getElementById('cfg-temp').value),
+    tokens:  parseInt(document.getElementById('cfg-tokens').value),
+    autoopen: document.getElementById('cfg-autoopen').value,
+  };
+  localStorage.setItem('nf_config', JSON.stringify(state.config));
+  loadConfigToUI();
+  snack('Configuration saved!', 'success');
+  log('ok', 'Config saved: model=' + state.config.model + ' vault=' + state.config.vault);
+}
+
+// ─────────────────────────────────────────────
+// FEATURES GRID
+// ─────────────────────────────────────────────
+function renderFeatureGrid() {
+  const grid = document.getElementById('feature-grid');
+  grid.innerHTML = obsidianFeatures.map((f, i) => `
+    <div class="feature-card ${f.enabled ? 'enabled' : ''}" id="fc-${f.id}" onclick="toggleFeature(${i})">
+      <div class="feature-card-icon" style="background:${f.color}22">
+        <span class="material-icons-round" style="color:${f.color}">${f.icon}</span>
+      </div>
+      <div style="flex:1">
+        <div class="feature-card-name">${f.name}</div>
+        <div class="feature-card-desc">${f.desc}</div>
+      </div>
+      <label class="toggle-switch" onclick="event.stopPropagation()">
+        <input type="checkbox" id="ft-${f.id}" ${f.enabled ? 'checked' : ''} onchange="toggleFeatureById('${f.id}')">
+        <div class="toggle-slider"></div>
+      </label>
+    </div>
+  `).join('');
+}
+
+function toggleFeature(i) {
+  obsidianFeatures[i].enabled = !obsidianFeatures[i].enabled;
+  renderFeatureGrid();
+}
+
+function toggleFeatureById(id) {
+  const f = obsidianFeatures.find(x => x.id === id);
+  if (f) f.enabled = !f.enabled;
+  renderFeatureGrid();
+}
+
+function getEnabledFeatures() {
+  return obsidianFeatures.filter(f => f.enabled).map(f => f.name);
+}
+
+// ─────────────────────────────────────────────
+// TAGS
+// ─────────────────────────────────────────────
+function setupTagsInput() {
+  const input = document.getElementById('tags-real-input');
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,/g, '');
+      if (val && !state.tags.includes(val)) {
+        state.tags.push(val);
+        renderTags();
+      }
+      input.value = '';
+    } else if (e.key === 'Backspace' && input.value === '' && state.tags.length > 0) {
+      state.tags.pop();
+      renderTags();
+    }
+  });
+}
+
+function renderTags() {
+  const wrapper = document.getElementById('tags-wrapper');
+  const input   = document.getElementById('tags-real-input');
+  wrapper.querySelectorAll('.tag-chip').forEach(t => t.remove());
+  state.tags.forEach((t, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `#${t}<span class="remove" onclick="removeTag(${i})">×</span>`;
+    wrapper.insertBefore(chip, input);
+  });
+}
+
+function removeTag(i) {
+  state.tags.splice(i, 1);
+  renderTags();
+}
+
+// ─────────────────────────────────────────────
+// MOOD
+// ─────────────────────────────────────────────
+function selectMood(el) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function getSelectedMood() {
+  const btn = document.querySelector('.mood-btn.selected');
+  return btn ? btn.dataset.mood : 'Not specified';
+}
+
+// ─────────────────────────────────────────────
+// PROMPT PRESETS
+// ─────────────────────────────────────────────
+const presets = {
+  journal: `You are a wise, empathetic journaling companion. Expand raw daily notes into a deeply personal, long-form journal entry. Explore emotions, uncover insights, draw connections to values and long-term goals. Use rich, literary language. Include: gratitude section, emotional analysis, a "Letter to Future Self" paragraph, key realizations, quotes. Add Mermaid mindmap and Obsidian wikilinks. Write minimum 800 words in the first person.`,
+
+  dev: `You are a senior developer's personal technical log assistant. Transform raw daily dev notes into a structured Engineering Log. Include: what was built/fixed, technical decisions and rationale, code architecture notes, blockers and debugging sessions, performance observations, learnings, TODOs with priority tags, links to concepts (wikilinks). Use code-block style callouts for technical insights. Add a Mermaid diagram of the day's work. Minimum 700 words.`,
+
+  executive: `You are an executive assistant writing high-signal daily briefings. Transform raw notes into a sharp, structured executive daily log. Include: top 3 decisions made, metrics and KPIs mentioned, stakeholder updates, risks and mitigations, strategic observations, action items with owners and deadlines. Use tables where appropriate. Add Dataview YAML with full metadata. Minimum 600 words.`,
+
+  stoic: `You are a Stoic philosopher helping the user reflect on their day through a Stoic lens. Transform raw notes into a Stoic practice journal. Include: a Memento Mori opening, what was within/outside your control today, Stoic reflections on challenges faced, dichotomy of control analysis, virtue practice log, evening meditation paragraph, a Marcus Aurelius or Epictetus quote relevant to the day. Add Mermaid mindmap. Write 700+ words.`,
+
+  creative: `You are a creative writing coach helping document the creative life. Transform raw notes into a rich creative journal. Use evocative language, metaphors, narrative storytelling. Include: the creative spark of the day, what obstacles arose and how they became gifts, aesthetic observations, inspiration catalogue, creative exercises completed, ideas generated, future project seeds. Add wikilinks for projects and concepts. 800+ words.`,
+
+  minimal: `Transform raw daily notes into a clean, minimal Markdown note. Use bullet points, concise prose. Include: daily summary (3 sentences), wins, blockers, tomorrow's top 3. Add YAML frontmatter. Keep it under 300 words. No fluff.`,
+};
+
+function loadPreset(key) {
+  document.getElementById('system-prompt').value = presets[key];
+  snack('Preset "' + key + '" loaded', 'success');
+}
+
+function resetPrompt() {
+  document.getElementById('system-prompt').value = presets.journal;
+}
+
+// ─────────────────────────────────────────────
+// GENERATE NOTE
+// ─────────────────────────────────────────────
+async function generateNote() {
+  const title     = document.getElementById('note-title').value.trim();
+  const body      = document.getElementById('note-body').value.trim();
+  const date      = document.getElementById('note-date').value.trim();
+  const energy    = document.getElementById('note-energy').value;
+  const focus     = document.getElementById('note-focus').value;
+  const wins      = document.getElementById('note-wins').value.trim();
+  const blockers  = document.getElementById('note-blockers').value.trim();
+  const tomorrow  = document.getElementById('note-tomorrow').value.trim();
+  const links     = document.getElementById('note-links').value.trim();
+  const sysprompt = document.getElementById('system-prompt').value.trim();
+  const tone      = document.getElementById('prompt-tone').value;
+  const length    = document.getElementById('prompt-length').value;
+  const extra     = document.getElementById('prompt-extra').value.trim();
+  const mood      = getSelectedMood();
+  const tags      = state.tags;
+  const features  = getEnabledFeatures();
+  const cfg       = getConfig();
+
+  if (!body) {
+    snack('Please write something in the entry body!', 'error');
+    return;
+  }
+
+  setProgress(true, 'Contacting backend…');
+  document.getElementById('gen-btn').disabled = true;
+  log('info', 'Generating note for ' + date);
+  showTab('preview');
+
+  const payload = {
+    title, body, date, energy, focus, wins, blockers, tomorrow,
+    links, mood, tags, tone, length, extra, features,
+    system_prompt: sysprompt,
+    config: cfg,
+  };
+
+  try {
+    log('info', 'POST ' + cfg.backend + '/generate');
+    const res = await fetch(cfg.backend + '/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(err.error || 'HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+    const noteContent = data.note;
+
+    state.lastGenerated = { content: noteContent, title, date, filename: data.filename };
+    renderPreview(noteContent);
+
+    document.getElementById('send-btn').disabled = false;
+    setProgress(false, 'Generated successfully');
+    setWordCount(noteContent);
+
+    // Stats
+    state.stats.total++;
+    if (obsidianFeatures.find(f => f.id === 'mindmap' && f.enabled)) state.stats.maps++;
+    saveStats();
+    updateStats();
+
+    // History
+    addToHistory({ title: title || date, date, filename: data.filename, words: wordCount(noteContent) });
+
+    log('ok', 'Note generated: ' + (data.filename || 'untitled') + ' (' + wordCount(noteContent) + ' words)');
+    snack('Note generated! ' + wordCount(noteContent) + ' words', 'success');
+
+  } catch (err) {
+    setProgress(false, 'Error: ' + err.message);
+    log('err', 'Generation failed: ' + err.message);
+    snack('Error: ' + err.message, 'error');
+    document.getElementById('output-preview').innerHTML = `<span style="color:var(--red)">Error: ${escapeHtml(err.message)}\n\nMake sure the Python backend is running:\n  python server.py</span>`;
+  }
+
+  document.getElementById('gen-btn').disabled = false;
+}
+
+// ─────────────────────────────────────────────
+// SEND TO OBSIDIAN
+// ─────────────────────────────────────────────
+async function sendToObsidian() {
+  if (!state.lastGenerated) return;
+  const cfg = getConfig();
+  setProgress(true, 'Sending to Obsidian…');
+  log('info', 'Sending to Obsidian vault: ' + cfg.vault);
+
+  try {
+    const res = await fetch(cfg.backend + '/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...state.lastGenerated, config: cfg }),
+    });
+
+    if (!res.ok) throw new Error((await res.json()).error || 'HTTP ' + res.status);
+
+    const data = await res.json();
+    state.stats.sent++;
+    state.stats.streak = data.streak || state.stats.streak;
+    saveStats();
+    updateStats();
+    setProgress(false, 'Sent: ' + data.path);
+    log('ok', 'Written to: ' + data.path);
+    snack('Saved to Obsidian: ' + data.filename, 'success');
+
+  } catch (err) {
+    setProgress(false, 'Send failed: ' + err.message);
+    log('err', 'Send failed: ' + err.message);
+    snack('Send failed: ' + err.message, 'error');
+  }
+}
+
+// ─────────────────────────────────────────────
+// BACKEND PING
+// ─────────────────────────────────────────────
+async function checkBackend() {
+  const cfg = getConfig();
+  log('info', 'Pinging ' + cfg.backend + '/health');
+  try {
+    const res = await fetch(cfg.backend + '/health', { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    snack('Backend online! Ollama: ' + (data.ollama ? 'OK' : 'Unreachable'), data.ollama ? 'success' : 'error');
+    log('ok', 'Health check passed. Ollama: ' + data.ollama_status + ' Model: ' + data.model);
+  } catch (err) {
+    snack('Backend unreachable: ' + err.message, 'error');
+    log('err', 'Ping failed: ' + err.message);
+  }
+}
+
+// ─────────────────────────────────────────────
+// HISTORY
+// ─────────────────────────────────────────────
+function addToHistory(item) {
+  state.notes.unshift({ ...item, ts: Date.now() });
+  if (state.notes.length > 100) state.notes.pop();
+  localStorage.setItem('nf_notes', JSON.stringify(state.notes));
+  renderHistory();
+  document.getElementById('hist-count').textContent = state.notes.length;
+  document.getElementById('notes-today').textContent = state.notes.filter(n => n.date === new Date().toISOString().split('T')[0]).length;
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (state.notes.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:24px">No notes yet — compose your first one!</div>';
+    return;
+  }
+  list.innerHTML = state.notes.map(n => `
+    <div class="history-item">
+      <div class="history-dot"></div>
+      <div class="history-meta">
+        <div class="history-title">${escapeHtml(n.title || n.date)}</div>
+        <div class="history-sub">${n.filename || 'untitled.md'} · ${n.words || 0} words</div>
+      </div>
+      <div class="history-date">${n.date}</div>
+    </div>
+  `).join('');
+  document.getElementById('hist-count').textContent = state.notes.length;
+}
+
+function clearHistory() {
+  if (!confirm('Clear all history?')) return;
+  state.notes = [];
+  localStorage.removeItem('nf_notes');
+  renderHistory();
+}
+
+// ─────────────────────────────────────────────
+// PREVIEW / RENDERING
+// ─────────────────────────────────────────────
+function renderPreview(text) {
+  const el = document.getElementById('output-preview');
+  el.textContent = text;
+  setWordCount(text);
+}
+
+function setWordCount(text) {
+  const count = wordCount(text);
+  document.getElementById('word-count').textContent = count + ' words';
+}
+
+function wordCount(text) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function copyPreview() {
+  const text = document.getElementById('output-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => snack('Copied to clipboard!', 'success'));
+}
+
+function downloadPreview() {
+  if (!state.lastGenerated) { snack('Nothing to download yet', 'error'); return; }
+  const blob = new Blob([state.lastGenerated.content], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = state.lastGenerated.filename || 'daily-note.md';
+  a.click();
+  snack('Downloaded ' + a.download, 'success');
+}
+
+// ─────────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────────
+function saveStats() {
+  localStorage.setItem('nf_stats', JSON.stringify(state.stats));
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent  = state.stats.total;
+  document.getElementById('stat-sent').textContent   = state.stats.sent;
+  document.getElementById('stat-maps').textContent   = state.stats.maps;
+  document.getElementById('stat-streak').textContent = state.stats.streak;
+}
+
+// ─────────────────────────────────────────────
+// FORM
+// ─────────────────────────────────────────────
+function clearForm() {
+  ['note-title','note-body','note-wins','note-blockers','note-tomorrow','note-links','note-energy','prompt-extra'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  state.tags = [];
+  renderTags();
+  snack('Form cleared', 'success');
+}
+
+// ─────────────────────────────────────────────
+// PROGRESS / LOG
+// ─────────────────────────────────────────────
+function setProgress(active, label) {
+  const bar   = document.getElementById('progress-bar');
+  const lbl   = document.getElementById('progress-label');
+  if (active) {
+    bar.classList.add('indeterminate');
+    bar.style.width = '';
+  } else {
+    bar.classList.remove('indeterminate');
+    bar.style.width = label.startsWith('Error') ? '0%' : '100%';
+    setTimeout(() => { bar.style.width = '0%'; }, 2000);
+  }
+  lbl.textContent = label;
+}
+
+function log(level, msg) {
+  const container = document.getElementById('log-container');
+  const now = new Date().toTimeString().split(' ')[0];
+  const cls = { info:'log-info', ok:'log-ok', warn:'log-warn', err:'log-err' }[level] || 'log-info';
+  const tag = { info:'[INFO]', ok:'[ OK ]', warn:'[WARN]', err:'[ERR]' }[level] || '[INFO]';
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${now}</span><span class="${cls}">${tag}</span><span>${escapeHtml(msg)}</span>`;
+  container.appendChild(line);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearLogs() {
+  document.getElementById('log-container').innerHTML = '';
+}
+
+// ─────────────────────────────────────────────
+// SNACKBAR
+// ─────────────────────────────────────────────
+let snackTimer;
+function snack(msg, type = 'success') {
+  const bar  = document.getElementById('snackbar');
+  const icon = document.getElementById('snack-icon');
+  const txt  = document.getElementById('snack-msg');
+  txt.textContent = msg;
+  icon.textContent = type === 'success' ? 'check_circle' : 'error';
+  bar.className = 'snackbar show ' + type;
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => { bar.className = 'snackbar'; }, 3200);
+}
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
