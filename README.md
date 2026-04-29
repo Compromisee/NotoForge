@@ -2,6 +2,8 @@
 
 > **An HTML dashboard + Python/Ollama backend that expands your raw daily notes into rich, detailed Obsidian Markdown files — with Mermaid mind maps, timelines, Dataview frontmatter, callout blocks, wikilinks, and more.**
 
+> [!WARNING]
+> USE NOTOFORGE V2 OR LATEST RELEASE!!
 ---
 
 ## Table of Contents
