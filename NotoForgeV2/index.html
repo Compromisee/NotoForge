@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NoteForge — Obsidian AI Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#12151c;--bg3:#181c26;
+  --surface:#1e2330;--surface2:#252c3a;
+  --border:#2a3147;--border2:#3a4460;
+  --accent:#7c6af7;--accent2:#5b4de0;--accent-glow:rgba(124,106,247,.22);--accent3:#c084fc;
+  --gold:#f0c060;--green:#4ade80;--red:#f87171;--cyan:#67e8f9;--orange:#fb923c;
+  --text:#e8ecf5;--text2:#9aa3ba;--text3:#5c6482;
+  --radius:14px;--radius-sm:8px;--shadow:0 8px 32px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.65;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.13;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;top:-30%;left:-10%;width:70vw;height:70vw;background:radial-gradient(circle,rgba(124,106,247,.055) 0%,transparent 65%);pointer-events:none;z-index:0}
+
+/* LAYOUT */
+.shell{position:relative;z-index:1;display:grid;grid-template-columns:252px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{grid-row:1/3;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:9px;display:grid;place-items:center;box-shadow:0 0 18px var(--accent-glow);flex-shrink:0}
+.logo-icon .mi{font-size:18px;color:#fff}
+.logo-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);line-height:1.1}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.sidebar-section{padding:12px 8px 4px}
+.sidebar-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all .13s;border:1px solid transparent;user-select:none}
+.nav-item:hover{background:var(--surface);color:var(--text);border-color:var(--border)}
+.nav-item.active{background:var(--surface2);color:var(--accent3);border-color:var(--border2)}
+.nav-item .mi{font-size:16px}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px}
+.nav-sep{height:1px;background:var(--border);margin:6px 8px}
+.sidebar-stats{margin-top:auto;padding:12px 14px;border-top:1px solid var(--border)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.stat-label{font-size:11px;color:var(--text3)}
+.stat-val{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent3);font-weight:700}
+.sdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+.sdot.off{background:var(--red);box-shadow:0 0 7px var(--red);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 22px;height:56px;display:flex;align-items:center;gap:12px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.topbar-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:7px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all .13s;white-space:nowrap}
+.btn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.btn .mi{font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent2);color:#fff;box-shadow:0 0 16px var(--accent-glow)}
+.btn.primary:hover{background:var(--accent2);box-shadow:0 0 24px var(--accent-glow);transform:translateY(-1px)}
+.btn.success{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--green)}
+.btn.success:hover{background:rgba(74,222,128,.18)}
+.btn.danger{background:rgba(248,113,113,.09);border-color:rgba(248,113,113,.25);color:var(--red)}
+.btn.danger:hover{background:rgba(248,113,113,.16)}
+.btn.gold{background:rgba(240,192,96,.09);border-color:rgba(240,192,96,.28);color:var(--gold)}
+.btn.gold:hover{background:rgba(240,192,96,.16)}
+.btn.cyan{background:rgba(103,232,249,.09);border-color:rgba(103,232,249,.25);color:var(--cyan)}
+.btn.sm{padding:5px 9px;font-size:11px}
+.btn.sm .mi{font-size:13px}
+
+/* MAIN */
+.main{padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp .32s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.panel-header{display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.panel-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);letter-spacing:.02em}
+.panel-icon{color:var(--accent3);font-size:16px}
+.panel-actions{margin-left:auto;display:flex;gap:5px;align-items:center}
+.panel-body{padding:15px}
+
+/* FORMS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:11px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.label-hint{font-size:10px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px}
+input[type=text],input[type=number],input[type=password],select,textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none;transition:border-color .13s,box-shadow .13s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+textarea{resize:vertical;min-height:80px;line-height:1.65}
+textarea.mono{font-family:'Space Mono',monospace;font-size:11px;min-height:140px}
+textarea.lg{min-height:130px}
+textarea.xl{min-height:180px}
+select option{background:var(--bg3)}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:36px}
+.pass-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px;user-select:none}
+.pass-eye:hover{color:var(--text2)}
+
+/* MOOD */
+.mood-row{display:flex;gap:5px;flex-wrap:wrap}
+.mood-btn{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;cursor:pointer;transition:all .13s;user-select:none;display:flex;align-items:center;gap:4px}
+.mood-btn .mi{font-size:13px}
+.mood-btn:hover{border-color:var(--border2);color:var(--text)}
+.mood-btn.sel{border-color:var(--accent);background:rgba(124,106,247,.13);color:var(--accent3)}
+
+/* TAGS */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 9px;min-height:36px;cursor:text;transition:border-color .13s,box-shadow .13s}
+.tags-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.tag-chip{display:flex;align-items:center;gap:3px;background:rgba(124,106,247,.13);border:1px solid var(--accent);border-radius:20px;color:var(--accent3);font-size:11px;padding:2px 7px}
+.tag-chip .rx{cursor:pointer;font-size:12px;opacity:.55;line-height:1}
+.tag-chip .rx:hover{opacity:1}
+.tags-in{background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-width:60px;flex:1}
+
+/* PROGRESS */
+.prog-wrap{flex:1;height:3px;background:var(--bg);border-radius:2px;overflow:hidden}
+.prog{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:2px;transition:width .4s ease;width:0%}
+.prog.ind{width:38%;animation:slide 1.3s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(370%)}}
+
+/* STATUS BAR */
+.status-bar{display:flex;align-items:center;gap:9px;padding:8px 15px;background:var(--bg3);border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+
+/* CARDS ROW */
+.cards-row{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;display:flex;flex-direction:column;gap:4px}
+.card-icon{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;margin-bottom:3px}
+.card-icon .mi{font-size:15px}
+.card-num{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--text)}
+.card-label{font-size:11px;color:var(--text3)}
+
+/* LOG */
+.log-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text2);max-height:260px;overflow-y:auto;line-height:1.8}
+.ll{display:flex;gap:7px}
+.lt{color:var(--text3);flex-shrink:0}
+.li{color:var(--cyan)}.lo{color:var(--green)}.lw{color:var(--gold)}.le{color:var(--red)}
+
+/* OUTPUT */
+.output-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text2);max-height:420px;overflow-y:auto;white-space:pre-wrap;line-height:1.85}
+
+/* HISTORY */
+.history-list{display:flex;flex-direction:column;gap:6px}
+.hist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .13s}
+.hist-item:hover{border-color:var(--border2)}
+.hist-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.hist-meta{flex:1}
+.hist-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px}
+.hist-sub{font-size:11px;color:var(--text3)}
+.hist-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);flex-shrink:0}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.badge.daily{background:rgba(124,106,247,.14);color:var(--accent3);border:1px solid rgba(124,106,247,.24)}
+.badge.idea{background:rgba(240,192,96,.11);color:var(--gold);border:1px solid rgba(240,192,96,.24)}
+.badge.query{background:rgba(103,232,249,.09);color:var(--cyan);border:1px solid rgba(103,232,249,.2)}
+.badge.note{background:rgba(74,222,128,.09);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+
+/* CONFIG GRID */
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+
+/* FEATURE GRID */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.feat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;transition:all .13s}
+.feat-card:hover{border-color:var(--border2);background:var(--surface)}
+.feat-card.on{border-color:var(--accent);background:rgba(124,106,247,.07)}
+.feat-icon{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;flex-shrink:0}
+.feat-icon .mi{font-size:14px}
+.feat-name{font-size:12px;font-weight:600;color:var(--text)}
+.feat-desc{font-size:11px;color:var(--text3);margin-top:1px;line-height:1.4}
+
+/* TOGGLE */
+.tog{position:relative;width:29px;height:16px;flex-shrink:0;margin-left:auto}
+.tog input{display:none}
+.tog-sl{position:absolute;inset:0;background:var(--bg);border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .18s}
+.tog-sl::before{content:'';position:absolute;width:10px;height:10px;border-radius:50%;background:var(--text3);top:2px;left:2px;transition:all .18s}
+input:checked+.tog-sl{background:var(--accent);border-color:var(--accent2)}
+input:checked+.tog-sl::before{background:#fff;transform:translateX(13px)}
+
+/* LINK RESULTS */
+.link-results{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.link-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:flex-start;gap:9px}
+.link-item.acc{border-color:var(--green);background:rgba(74,222,128,.04)}
+.link-item.rej{opacity:.38}
+.link-file{font-family:'Space Mono',monospace;font-size:11px;color:var(--cyan);margin-bottom:2px}
+.link-reason{font-size:12px;color:var(--text2)}
+.link-score{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px}
+.link-acts{margin-left:auto;display:flex;gap:4px;flex-shrink:0}
+
+/* TAG SUGGESTIONS */
+.tag-sug{display:inline-flex;align-items:center;gap:3px;background:rgba(240,192,96,.09);border:1px solid rgba(240,192,96,.28);border-radius:20px;color:var(--gold);font-size:11px;padding:3px 8px;cursor:pointer;transition:all .13s;margin:2px}
+.tag-sug:hover{background:rgba(240,192,96,.16)}
+.tag-sug.acc{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.28);color:var(--green);cursor:default}
+.tag-sug .mi{font-size:12px}
+
+/* SCAN STATS */
+.scan-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.scan-stat{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px}
+.scan-val{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--accent3)}
+.scan-lbl{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* INFO BOX */
+.info-box{background:rgba(103,232,249,.05);border:1px solid rgba(103,232,249,.16);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.6;display:flex;gap:7px;align-items:flex-start}
+.info-box .mi{font-size:15px;color:var(--cyan);flex-shrink:0;margin-top:1px}
+.warn-box{background:rgba(240,192,96,.05);border:1px solid rgba(240,192,96,.18);border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.6;display:flex;gap:7px;align-items:flex-start}
+.warn-box .mi{font-size:15px;color:var(--gold);flex-shrink:0;margin-top:1px}
+
+/* PRESET BTN */
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.preset-btn{padding:4px 9px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;transition:all .13s;display:flex;align-items:center;gap:3px}
+.preset-btn:hover{border-color:var(--gold);color:var(--gold)}
+.preset-btn .mi{font-size:12px}
+
+/* PLUGIN CARDS */
+.plugin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.plugin-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px}
+.plugin-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:7px}
+.plugin-desc{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:10px}
+.plugin-features{display:flex;flex-direction:column;gap:4px}
+.plugin-feature{font-size:11px;color:var(--text3);display:flex;align-items:flex-start;gap:5px}
+.plugin-feature .mi{font-size:13px;color:var(--accent3);flex-shrink:0;margin-top:1px}
+.plugin-footer{display:flex;gap:6px;margin-top:10px;align-items:center}
+.plugin-status{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-left:auto}
+.plugin-status.active{color:var(--green)}
+
+/* AI PROVIDER SELECTOR */
+.provider-tabs{display:flex;gap:2px;margin-bottom:14px}
+.ptab{padding:7px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);transition:all .13s;display:flex;align-items:center;gap:5px}
+.ptab:hover{border-color:var(--border2);color:var(--text)}
+.ptab.active{border-color:var(--accent);background:rgba(124,106,247,.12);color:var(--accent3)}
+.ptab .mi{font-size:15px}
+.provider-panel{display:none}
+.provider-panel.active{display:block}
+
+/* CALENDAR WIDGET */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:10px}
+.cal-day{aspect-ratio:1;border-radius:5px;display:grid;place-items:center;font-size:11px;color:var(--text3);cursor:pointer;transition:all .13s;border:1px solid transparent;position:relative}
+.cal-day:hover{background:var(--surface);border-color:var(--border)}
+.cal-day.has-note{color:var(--accent3);font-weight:700}
+.cal-day.has-note::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent3)}
+.cal-day.has-task{color:var(--gold)}
+.cal-day.has-task::after{background:var(--gold)}
+.cal-day.today{background:rgba(124,106,247,.12);border-color:var(--accent);color:var(--accent3)}
+.cal-day.other-month{opacity:.3}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
+.cal-header-day{text-align:center;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-month{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+
+/* TASKS LIST */
+.tasks-list{display:flex;flex-direction:column;gap:5px}
+.task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);transition:border-color .13s}
+.task-item:hover{border-color:var(--border2)}
+.task-item.done{opacity:.5}
+.task-item.done .task-text{text-decoration:line-through}
+.task-cb{width:15px;height:15px;border-radius:3px;border:1px solid var(--border2);cursor:pointer;flex-shrink:0;margin-top:1px;display:grid;place-items:center;transition:all .13s}
+.task-cb.checked{background:var(--green);border-color:var(--green)}
+.task-cb .mi{font-size:11px;color:#fff}
+.task-text{font-size:12px;color:var(--text2);flex:1}
+.task-meta{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+.task-due{font-family:'Space Mono',monospace;font-size:10px;padding:1px 6px;border-radius:20px;border:1px solid var(--border);color:var(--text3)}
+.task-due.overdue{border-color:rgba(248,113,113,.4);color:var(--red)}
+.task-due.soon{border-color:rgba(240,192,96,.35);color:var(--gold)}
+.task-due.ok{border-color:rgba(74,222,128,.3);color:var(--green)}
+.task-pri{font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px}
+.task-pri.high{background:rgba(248,113,113,.1);color:var(--red)}
+.task-pri.med{background:rgba(240,192,96,.1);color:var(--gold)}
+.task-pri.low{background:rgba(74,222,128,.09);color:var(--green)}
+
+/* QUERY ANSWER */
+.query-ans{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;font-size:13px;color:var(--text2);line-height:1.8;max-height:380px;overflow-y:auto;white-space:pre-wrap}
+.source-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.source-chip{display:flex;align-items:center;gap:3px;background:rgba(103,232,249,.07);border:1px solid rgba(103,232,249,.18);border-radius:20px;color:var(--cyan);font-family:'Space Mono',monospace;font-size:10px;padding:2px 8px}
+.source-chip .mi{font-size:11px}
+
+/* IDEA LIST */
+.idea-list{display:flex;flex-direction:column;gap:7px}
+.idea-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;transition:border-color .13s}
+.idea-card:hover{border-color:var(--border2)}
+.idea-card-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.idea-card-meta{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:4px 0}
+
+/* SNACKBAR */
+.snackbar{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 15px;font-size:13px;color:var(--text);box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;z-index:9999;transform:translateY(70px);opacity:0;transition:all .22s cubic-bezier(.34,1.56,.64,1)}
+.snackbar.show{transform:translateY(0);opacity:1}
+.snackbar .mi{font-size:16px}
+.snackbar.success{border-color:rgba(74,222,128,.38)}
+.snackbar.success .mi{color:var(--green)}
+.snackbar.error{border-color:rgba(248,113,113,.38)}
+.snackbar.error .mi{color:var(--red)}
+.snackbar.info{border-color:rgba(103,232,249,.3)}
+.snackbar.info .mi{color:var(--cyan)}
+
+/* TAB CONTENT */
+.tc{display:none}
+.tc.active{display:flex;flex-direction:column;gap:16px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .cards-row{grid-template-columns:repeat(2,1fr)}
+  .cfg-grid{grid-template-columns:1fr}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .plugin-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon"><span class="mi material-icons-round">hub</span></div>
+      <div>
+        <div class="logo-text">NoteForge</div>
+        <div class="logo-sub">Obsidian AI Workspace</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Notes</div>
+    <div class="nav-item active" onclick="goTab('compose',this)"><span class="mi material-icons-round">edit_note</span> Daily Note</div>
+    <div class="nav-item" onclick="goTab('ideas',this)"><span class="mi material-icons-round">lightbulb</span> Ideas &amp; Thoughts</div>
+    <div class="nav-item" onclick="goTab('query',this)"><span class="mi material-icons-round">manage_search</span> Vault Query</div>
+    <div class="nav-item" onclick="goTab('history',this)"><span class="mi material-icons-round">history</span> History <span class="nav-badge" id="hist-badge">0</span></div>
+    <div class="nav-item" onclick="goTab('preview',this)"><span class="mi material-icons-round">preview</span> Preview</div>
+  </div>
+
+  <div class="nav-sep"></div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Vault Intelligence</div>
+    <div class="nav-item" onclick="goTab('linker',this)"><span class="mi material-icons-round">account_tree</span> Auto Linker</div>
+    <div class="nav-item" onclick="goTab('tagger',this)"><span class="mi material-icons-round">sell</span> Tag Generator</div>
+  </div>
+
+  <div class="nav-sep"></div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Plugins &amp; Calendar</div>
+    <div class="nav-item" onclick="goTab('plugins',this)"><span class="mi material-icons-round">extension</span> Plugin Support</div>
+    <div class="nav-item" onclick="goTab('calendar',this)"><span class="mi material-icons-round">calendar_month</span> Calendar &amp; Tasks</div>
+  </div>
+
+  <div class="nav-sep"></div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
+    <div class="nav-item" onclick="goTab('config',this)"><span class="mi material-icons-round">settings</span> Configuration</div>
+    <div class="nav-item" onclick="goTab('obsidian',this)"><span class="mi material-icons-round">auto_awesome</span> Obsidian Features</div>
+    <div class="nav-item" onclick="goTab('logs',this)"><span class="mi material-icons-round">terminal</span> Server Logs</div>
+  </div>
+
+  <div class="sidebar-stats">
+    <div class="stat-row"><span class="stat-label">Backend</span><span class="stat-val" id="be-label"><span class="sdot" id="be-dot"></span> Online</span></div>
+    <div class="stat-row"><span class="stat-label">AI Provider</span><span class="stat-val" id="provider-label">Ollama</span></div>
+    <div class="stat-row"><span class="stat-label">Model</span><span class="stat-val" id="model-label">llama3</span></div>
+    <div class="stat-row"><span class="stat-label">Vault</span><span class="stat-val" id="vault-label" title="">~/vault</span></div>
+    <div class="stat-row"><span class="stat-label">Streak</span><span class="stat-val" id="streak-label">0 days</span></div>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <span class="mi material-icons-round" style="color:var(--accent3)">auto_awesome</span>
+  <div>
+    <div class="topbar-title" id="page-title">Daily Note Compose</div>
+    <div class="topbar-date" id="page-date"></div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn" onclick="checkBackend()"><span class="mi material-icons-round">sensors</span> Ping</button>
+    <button class="btn primary" id="primary-btn" onclick="primaryAction()"><span class="mi material-icons-round">send</span> Generate &amp; Send</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- STATS -->
+  <div class="cards-row">
+    <div class="card"><div class="card-icon" style="background:rgba(124,106,247,.12)"><span class="mi material-icons-round" style="color:var(--accent3)">auto_stories</span></div><div class="card-num" id="s-total">0</div><div class="card-label">Notes Generated</div></div>
+    <div class="card"><div class="card-icon" style="background:rgba(74,222,128,.09)"><span class="mi material-icons-round" style="color:var(--green)">check_circle</span></div><div class="card-num" id="s-sent">0</div><div class="card-label">Sent to Obsidian</div></div>
+    <div class="card"><div class="card-icon" style="background:rgba(103,232,249,.09)"><span class="mi material-icons-round" style="color:var(--cyan)">link</span></div><div class="card-num" id="s-links">0</div><div class="card-label">Links Applied</div></div>
+    <div class="card"><div class="card-icon" style="background:rgba(240,192,96,.09)"><span class="mi material-icons-round" style="color:var(--gold)">sell</span></div><div class="card-num" id="s-tags">0</div><div class="card-label">Tags Generated</div></div>
+    <div class="card"><div class="card-icon" style="background:rgba(251,146,60,.09)"><span class="mi material-icons-round" style="color:var(--orange)">local_fire_department</span></div><div class="card-num" id="s-streak">0</div><div class="card-label">Day Streak</div></div>
+  </div>
+
+  <!-- ===== TAB: COMPOSE ===== -->
+  <div id="tc-compose" class="tc active">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">edit_note</span>
+        <span class="panel-title">Daily Entry</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="clearForm()"><span class="mi material-icons-round">clear_all</span> Clear</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="grid2">
+          <div class="fg"><label>Title</label><input type="text" id="n-title" placeholder="Today's headline or theme..."/></div>
+          <div class="fg"><label>Date</label><input type="text" id="n-date"/></div>
+          <div class="fg full"><label>Raw Notes</label><textarea id="n-body" class="xl" placeholder="Dump everything here — events, wins, blockers, thoughts, conversations. The more detail, the richer the note."></textarea></div>
+          <div class="fg"><label>Energy Level (1-10)</label><input type="number" id="n-energy" min="1" max="10" placeholder="7"/></div>
+          <div class="fg"><label>Focus Area</label>
+            <select id="n-focus">
+              <option value="">Select...</option>
+              <option value="work">Work / Career</option>
+              <option value="personal">Personal Growth</option>
+              <option value="health">Health and Fitness</option>
+              <option value="creative">Creative / Projects</option>
+              <option value="learning">Learning / Study</option>
+              <option value="social">Social / Relationships</option>
+              <option value="finance">Finance</option>
+              <option value="mixed">Mixed / General</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-bottom:11px">
+          <label>Mood</label>
+          <div class="mood-row">
+            <div class="mood-btn" data-mood="Energized" onclick="pickMood(this)"><span class="mi material-icons-round">bolt</span> Energized</div>
+            <div class="mood-btn" data-mood="Calm" onclick="pickMood(this)"><span class="mi material-icons-round">self_improvement</span> Calm</div>
+            <div class="mood-btn" data-mood="Focused" onclick="pickMood(this)"><span class="mi material-icons-round">center_focus_strong</span> Focused</div>
+            <div class="mood-btn" data-mood="Tired" onclick="pickMood(this)"><span class="mi material-icons-round">bedtime</span> Tired</div>
+            <div class="mood-btn" data-mood="Frustrated" onclick="pickMood(this)"><span class="mi material-icons-round">sentiment_dissatisfied</span> Frustrated</div>
+            <div class="mood-btn" data-mood="Anxious" onclick="pickMood(this)"><span class="mi material-icons-round">warning_amber</span> Anxious</div>
+            <div class="mood-btn" data-mood="Excited" onclick="pickMood(this)"><span class="mi material-icons-round">celebration</span> Excited</div>
+            <div class="mood-btn" data-mood="Neutral" onclick="pickMood(this)"><span class="mi material-icons-round">remove</span> Neutral</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="fg"><label>Wins / Accomplishments</label><textarea id="n-wins" style="min-height:60px" placeholder="What did you complete?"></textarea></div>
+          <div class="fg"><label>Blockers / Challenges</label><textarea id="n-blockers" style="min-height:60px" placeholder="What got in the way?"></textarea></div>
+          <div class="fg full"><label>Tomorrow's Intentions</label><textarea id="n-tomorrow" style="min-height:56px" placeholder="What will you tackle first?"></textarea></div>
+        </div>
+
+        <div class="fg" style="margin-bottom:11px">
+          <label>Tags <span class="label-hint">— Enter or comma to add</span></label>
+          <div class="tags-wrap" id="tw-compose" onclick="document.getElementById('ti-compose').focus()">
+            <input type="text" class="tags-in" id="ti-compose" placeholder="Add tag..."/>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Obsidian Notes to Link</label>
+          <input type="text" id="n-links" placeholder="[[Project Alpha]], [[Goals 2025]], [[Sarah]]..."/>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">tune</span>
+        <span class="panel-title">AI Prompt Customizer</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="resetSysPrompt('compose')"><span class="mi material-icons-round">restart_alt</span> Reset</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="preset-row">
+          <span style="font-size:11px;color:var(--text3);align-self:center;margin-right:3px">Presets:</span>
+          <button class="preset-btn" onclick="loadPreset('journal')"><span class="mi material-icons-round">book</span> Deep Journal</button>
+          <button class="preset-btn" onclick="loadPreset('dev')"><span class="mi material-icons-round">code</span> Dev Log</button>
+          <button class="preset-btn" onclick="loadPreset('executive')"><span class="mi material-icons-round">bar_chart</span> Executive</button>
+          <button class="preset-btn" onclick="loadPreset('stoic')"><span class="mi material-icons-round">account_balance</span> Stoic</button>
+          <button class="preset-btn" onclick="loadPreset('creative')"><span class="mi material-icons-round">palette</span> Creative</button>
+          <button class="preset-btn" onclick="loadPreset('minimal')"><span class="mi material-icons-round">crop_square</span> Minimal</button>
+        </div>
+        <div class="grid2">
+          <div class="fg full"><label>System Prompt</label>
+            <textarea class="mono" id="sp-compose">You are a meticulous Obsidian daily note assistant. Write deeply reflective Markdown notes.
+
+Always include:
+1. Valid YAML frontmatter: date, tags, mood, energy, focus, aliases, related
+2. Executive summary paragraph capturing the day's essence
+3. Detailed expansion of every raw note point with reflection and context
+4. Pattern recognition: recurring themes, emotions, ideas
+5. [!insight] callout block for the key realization of the day
+6. Connections to ongoing goals, projects, long-term arcs
+7. Obsidian [[wikilinks]] for all mentioned people, projects, concepts
+8. Mermaid mindmap of the day's themes and connections
+9. Mermaid timeline of key events (if applicable)
+10. Tomorrow's tasks as - [ ] items with due dates per Tasks plugin format
+11. Gratitude section (3 items minimum)
+12. A meaningful closing quote or reflection
+13. [!tip], [!warning], [!quote] callout blocks where relevant
+14. Graph-friendly tags for Obsidian clustering
+
+Write in the first person, warm and introspective. Minimum 700 words. Output raw Markdown only, starting with --- YAML frontmatter.</textarea>
+          </div>
+          <div class="fg"><label>Tone</label>
+            <select id="n-tone">
+              <option value="reflective">Reflective and introspective</option>
+              <option value="analytical">Analytical and structured</option>
+              <option value="motivational">Motivational and forward-looking</option>
+              <option value="journalistic">Journalistic and objective</option>
+              <option value="stoic">Stoic and philosophical</option>
+              <option value="casual">Casual and conversational</option>
+            </select>
+          </div>
+          <div class="fg"><label>Target Length</label>
+            <select id="n-length">
+              <option value="medium">Medium (~400 words)</option>
+              <option value="long" selected>Long (~800 words)</option>
+              <option value="epic">Epic (1500+ words)</option>
+            </select>
+          </div>
+          <div class="fg full"><label>Extra Instructions</label>
+            <textarea id="n-extra" style="min-height:56px" placeholder="E.g. Always include gratitude section. Reference Q2 shipping goal. Add weekly review on Fridays..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tc-compose -->
+
+
+  <!-- ===== TAB: IDEAS ===== -->
+  <div id="tc-ideas" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">lightbulb</span>
+        <span class="panel-title">Idea or Thought</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="clearIdea()"><span class="mi material-icons-round">clear_all</span> Clear</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="info-box" style="margin-bottom:12px">
+          <span class="mi material-icons-round">info</span>
+          Drop a rough idea, question, shower thought, or fragment. The AI will elaborate, explore angles, generate connections, and optionally save it as a standalone Obsidian note.
+        </div>
+        <div class="grid2">
+          <div class="fg"><label>Title or Slug</label><input type="text" id="i-title" placeholder="One-line label..."/></div>
+          <div class="fg"><label>Category</label>
+            <select id="i-cat">
+              <option value="idea">Idea</option>
+              <option value="question">Question</option>
+              <option value="observation">Observation</option>
+              <option value="hypothesis">Hypothesis</option>
+              <option value="project">Project Seed</option>
+              <option value="philosophy">Philosophy</option>
+              <option value="technical">Technical</option>
+              <option value="creative">Creative</option>
+            </select>
+          </div>
+          <div class="fg full"><label>Your Raw Thought</label><textarea id="i-body" class="xl" placeholder="Write anything — a fragment, a half-formed idea, a question. The messier the better. The AI expands it."></textarea></div>
+          <div class="fg full"><label>Context or Related Notes</label><input type="text" id="i-context" placeholder="What prompted this? e.g. [[Reading Notes]], [[Project X]]..."/></div>
+        </div>
+        <div class="fg" style="margin-bottom:11px">
+          <label>Tags <span class="label-hint">— Enter to add</span></label>
+          <div class="tags-wrap" id="tw-idea" onclick="document.getElementById('ti-idea').focus()">
+            <input type="text" class="tags-in" id="ti-idea" placeholder="Add tag..."/>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Elaboration Depth</label>
+          <select id="i-depth">
+            <option value="brief">Brief — key angles only (~300 words)</option>
+            <option value="standard" selected>Standard — thorough exploration (~600 words)</option>
+            <option value="deep">Deep — full note with mindmap and connections (~1000+ words)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">tune</span>
+        <span class="panel-title">Elaboration System Prompt</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="resetSysPrompt('idea')"><span class="mi material-icons-round">restart_alt</span> Reset</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <textarea class="mono" id="sp-idea">You are a brilliant thought partner and Zettelkasten note architect. When given a rough idea or fragment:
+
+1. Restate the core idea clearly and precisely in one sentence
+2. Identify what type of idea this is (conceptual, practical, philosophical, technical, creative)
+3. Explore 3-5 distinct angles or dimensions of the idea with depth
+4. Ask and answer the most important questions this idea raises
+5. Identify connections to adjacent concepts, fields, or disciplines
+6. Point out assumptions underlying this idea
+7. Suggest how this idea could be developed, tested, or applied
+8. Note any tensions, paradoxes, or open questions
+9. Generate related Obsidian [[wikilinks]] for concepts deserving their own notes
+10. Add a Mermaid mindmap showing how the idea branches outward
+11. Suggest 5-8 relevant tags for Obsidian graph clustering
+12. Close with "Where to go from here" — concrete next steps
+
+Write as a thoughtful intellectual companion. Use headers, callout blocks [!insight], [!question], wikilinks. YAML frontmatter with tags, type, created. Output raw Markdown only.</textarea>
+      </div>
+    </div>
+
+    <div class="panel" id="idea-out-panel" style="display:none">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">description</span>
+        <span class="panel-title">Elaborated Idea</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="copyBox('idea-out')"><span class="mi material-icons-round">content_copy</span> Copy</button>
+          <button class="btn sm gold" onclick="dlIdea()"><span class="mi material-icons-round">download</span> Download</button>
+          <button class="btn sm primary" onclick="sendIdea()"><span class="mi material-icons-round">send</span> Save to Vault</button>
+        </div>
+      </div>
+      <div class="panel-body"><div class="output-box" id="idea-out"></div></div>
+      <div class="status-bar">
+        <span id="idea-plbl" style="color:var(--text3)">Ready</span>
+        <div class="prog-wrap"><div class="prog" id="idea-pb"></div></div>
+        <span id="idea-wc" style="font-family:'Space Mono',monospace;font-size:10px">0 words</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">inventory_2</span>
+        <span class="panel-title">Saved Ideas</span>
+        <div class="panel-actions">
+          <button class="btn sm danger" onclick="clearIdeas()"><span class="mi material-icons-round">delete_sweep</span> Clear All</button>
+        </div>
+      </div>
+      <div class="panel-body"><div class="idea-list" id="idea-list"><div style="color:var(--text3);font-size:12px;text-align:center;padding:18px">No ideas saved yet.</div></div></div>
+    </div>
+  </div><!-- /tc-ideas -->
+
+
+  <!-- ===== TAB: QUERY ===== -->
+  <div id="tc-query" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">manage_search</span>
+        <span class="panel-title">Query Your Vault</span>
+      </div>
+      <div class="panel-body">
+        <div class="info-box" style="margin-bottom:12px">
+          <span class="mi material-icons-round">info</span>
+          Ask anything about your vault. The backend scans relevant notes for context, then the AI answers using that context. You can save any answer as a new Obsidian note.
+        </div>
+        <div class="fg" style="margin-bottom:11px"><label>Your Question or Query</label>
+          <textarea id="q-input" class="lg" placeholder="What recurring themes appear in my notes this month? / Summarize everything about Project Alpha. / What were my biggest blockers in January?..."></textarea>
+        </div>
+        <div class="grid2">
+          <div class="fg"><label>Search Scope</label>
+            <select id="q-scope">
+              <option value="daily">Daily Notes folder only</option>
+              <option value="vault" selected>Entire vault</option>
+              <option value="folder">Specific folder</option>
+            </select>
+          </div>
+          <div class="fg"><label>Specific Folder (if above = Specific)</label><input type="text" id="q-folder" placeholder="e.g. Projects/Alpha"/></div>
+          <div class="fg"><label>Max Notes to Scan</label>
+            <select id="q-maxnotes">
+              <option value="10">10 notes</option>
+              <option value="25" selected>25 notes</option>
+              <option value="50">50 notes</option>
+              <option value="100">100 notes</option>
+            </select>
+          </div>
+          <div class="fg"><label>Answer Style</label>
+            <select id="q-style">
+              <option value="summary">Narrative summary</option>
+              <option value="bullets">Bullet point list</option>
+              <option value="structured">Structured report</option>
+              <option value="timeline">Chronological timeline</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="q-result-panel" style="display:none">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">article</span>
+        <span class="panel-title">Answer</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="copyBox('q-ans')"><span class="mi material-icons-round">content_copy</span> Copy</button>
+          <button class="btn sm gold" onclick="dlQuery()"><span class="mi material-icons-round">download</span> Download</button>
+          <button class="btn sm primary" onclick="showQuerySave()"><span class="mi material-icons-round">save</span> Save as Note</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="query-ans" id="q-ans"></div>
+        <div style="margin-top:9px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase">Sources used</div>
+          <div class="source-list" id="q-sources"></div>
+        </div>
+      </div>
+      <div class="status-bar">
+        <span id="q-plbl" style="color:var(--text3)">Ready</span>
+        <div class="prog-wrap"><div class="prog" id="q-pb"></div></div>
+        <span id="q-wc" style="font-family:'Space Mono',monospace;font-size:10px">0 words</span>
+      </div>
+    </div>
+
+    <div class="panel" id="q-save-panel" style="display:none">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">save</span>
+        <span class="panel-title">Save as Obsidian Note</span>
+      </div>
+      <div class="panel-body">
+        <div class="grid2">
+          <div class="fg"><label>Note Title</label><input type="text" id="qs-title" placeholder="Query result title..."/></div>
+          <div class="fg"><label>Save to Folder</label><input type="text" id="qs-folder" placeholder="e.g. Queries"/></div>
+          <div class="fg full"><label>Additional Notes</label><textarea id="qs-notes" style="min-height:52px" placeholder="Any extra context to append..."></textarea></div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:4px">
+          <button class="btn primary" onclick="confirmQuerySave()"><span class="mi material-icons-round">send</span> Confirm Save</button>
+          <button class="btn" onclick="document.getElementById('q-save-panel').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tc-query -->
+
+
+  <!-- ===== TAB: HISTORY ===== -->
+  <div id="tc-history" class="tc">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">history</span>
+        <span class="panel-title">Note History</span>
+        <div class="panel-actions">
+          <button class="btn sm danger" onclick="clearHistory()"><span class="mi material-icons-round">delete_sweep</span> Clear All</button>
+        </div>
+      </div>
+      <div class="panel-body"><div class="history-list" id="history-list"><div style="color:var(--text3);font-size:12px;text-align:center;padding:18px">No notes yet.</div></div></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PREVIEW ===== -->
+  <div id="tc-preview" class="tc">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">description</span>
+        <span class="panel-title">Generated Note Preview</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="copyBox('main-out')"><span class="mi material-icons-round">content_copy</span> Copy</button>
+          <button class="btn sm gold" onclick="dlPreview()"><span class="mi material-icons-round">download</span> Download .md</button>
+          <button class="btn sm primary" id="send-btn" onclick="sendToObsidian()" disabled><span class="mi material-icons-round">send</span> Send to Obsidian</button>
+        </div>
+      </div>
+      <div class="panel-body"><div class="output-box" id="main-out"><span style="color:var(--text3)">Generate a note to see the preview here...</span></div></div>
+      <div class="status-bar">
+        <span id="main-plbl" style="color:var(--text3)">Ready</span>
+        <div class="prog-wrap"><div class="prog" id="main-pb"></div></div>
+        <span id="main-wc" style="font-family:'Space Mono',monospace;font-size:10px">0 words</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: LINKER ===== -->
+  <div id="tc-linker" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">account_tree</span>
+        <span class="panel-title">Vault Auto Linker</span>
+      </div>
+      <div class="panel-body">
+        <div class="info-box" style="margin-bottom:12px">
+          <span class="mi material-icons-round">info</span>
+          The AI reads every note in your vault, identifies contextual relationships, and suggests [[wikilinks]] between notes that share themes, concepts, people, or projects. Review each suggestion before applying.
+        </div>
+        <div class="grid2">
+          <div class="fg"><label>Source Note (leave blank for all notes)</label><input type="text" id="l-source" placeholder="Daily Notes/2025-01-15-daily.md or blank = scan all"/></div>
+          <div class="fg"><label>Similarity Threshold</label>
+            <select id="l-thresh">
+              <option value="high">High — very strong matches only</option>
+              <option value="medium" selected>Medium — balanced suggestions</option>
+              <option value="low">Low — more suggestions, lower confidence</option>
+            </select>
+          </div>
+          <div class="fg"><label>Max Notes to Scan</label>
+            <select id="l-maxnotes">
+              <option value="20">20 notes</option>
+              <option value="50" selected>50 notes</option>
+              <option value="100">100 notes</option>
+              <option value="all">All notes (slow)</option>
+            </select>
+          </div>
+          <div class="fg"><label>Insertion Mode</label>
+            <select id="l-mode">
+              <option value="suggest">Suggest only — manual review</option>
+              <option value="auto">Auto-insert approved links</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn primary" onclick="runLinker()"><span class="mi material-icons-round">auto_fix_high</span> Scan and Suggest Links</button>
+          <button class="btn" onclick="acceptAllLinks()"><span class="mi material-icons-round">done_all</span> Accept All</button>
+          <button class="btn danger" onclick="rejectAllLinks()"><span class="mi material-icons-round">remove_done</span> Reject All</button>
+          <button class="btn success" id="apply-links-btn" disabled onclick="applyLinks()"><span class="mi material-icons-round">send</span> Apply Accepted Links</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="linker-res-panel" style="display:none">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">link</span>
+        <span class="panel-title">Link Suggestions</span>
+        <div class="panel-actions"><span id="linker-summary" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">0 suggestions</span></div>
+      </div>
+      <div class="panel-body">
+        <div class="link-results" id="link-results"></div>
+      </div>
+      <div class="status-bar">
+        <span id="l-plbl" style="color:var(--text3)">Ready</span>
+        <div class="prog-wrap"><div class="prog" id="l-pb"></div></div>
+        <span id="l-acc" style="font-family:'Space Mono',monospace;font-size:10px">0 accepted</span>
+      </div>
+    </div>
+
+    <div class="panel" id="linker-stats-panel" style="display:none">
+      <div class="panel-header"><span class="mi material-icons-round panel-icon">analytics</span><span class="panel-title">Scan Statistics</span></div>
+      <div class="panel-body"><div class="scan-grid" id="scan-stats"></div></div>
+    </div>
+  </div><!-- /tc-linker -->
+
+
+  <!-- ===== TAB: TAGGER ===== -->
+  <div id="tc-tagger" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">sell</span>
+        <span class="panel-title">AI Tag Generator</span>
+      </div>
+      <div class="panel-body">
+        <div class="info-box" style="margin-bottom:12px">
+          <span class="mi material-icons-round">info</span>
+          Paste note content or point to a vault file. The AI analyzes and generates contextually relevant tags optimized for Obsidian graph clustering, searchability, and Dataview queries.
+        </div>
+        <div class="grid2">
+          <div class="fg"><label>Mode</label>
+            <select id="t-mode" onchange="taggerModeChange()">
+              <option value="paste">Paste content directly</option>
+              <option value="file">Point to a vault file</option>
+              <option value="scan">Scan entire vault for missing tags</option>
+            </select>
+          </div>
+          <div class="fg"><label>Tag Style</label>
+            <select id="t-style">
+              <option value="mixed">Mixed — hierarchy and flat</option>
+              <option value="flat">Flat — single words/phrases</option>
+              <option value="hierarchical">Hierarchical — parent/child</option>
+            </select>
+          </div>
+          <div class="fg full" id="t-paste-grp"><label>Note Content</label><textarea id="t-content" class="xl" placeholder="Paste full note content here..."></textarea></div>
+          <div class="fg full" id="t-file-grp" style="display:none"><label>File Path (relative to vault root)</label><input type="text" id="t-file" placeholder="Daily Notes/2025-01-15-daily.md"/></div>
+        </div>
+        <div class="fg" style="margin-bottom:11px"><label>Existing Tags to Avoid Duplicating</label><input type="text" id="t-existing" placeholder="#rust, #tauri, #daily-note — comma-separated"/></div>
+        <div class="fg" style="margin-bottom:13px"><label>Tag Count Target</label>
+          <select id="t-count">
+            <option value="5">5 tags</option>
+            <option value="10" selected>10 tags</option>
+            <option value="15">15 tags</option>
+            <option value="20">20 tags</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn primary" onclick="runTagger()"><span class="mi material-icons-round">auto_awesome</span> Generate Tags</button>
+          <button class="btn success" id="apply-tags-btn" disabled onclick="applyTags()"><span class="mi material-icons-round">done_all</span> Apply Tags to Note</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tagger-res-panel" style="display:none">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">label</span>
+        <span class="panel-title">Suggested Tags</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="acceptAllTags()"><span class="mi material-icons-round">done_all</span> Accept All</button>
+          <button class="btn sm danger" onclick="rejectAllTags()"><span class="mi material-icons-round">remove_done</span> Reject All</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:7px;font-weight:700;letter-spacing:.07em;text-transform:uppercase">Click to accept or reject</div>
+        <div id="tag-sug-container" style="display:flex;flex-wrap:wrap;gap:3px"></div>
+        <div id="tag-reasoning-wrap" style="display:none;margin-top:12px">
+          <div class="divider" style="margin-bottom:10px"></div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700;letter-spacing:.07em;text-transform:uppercase">AI Reasoning</div>
+          <div id="tag-reasoning" style="font-size:12px;color:var(--text2);line-height:1.7"></div>
+        </div>
+      </div>
+      <div class="status-bar">
+        <span id="t-plbl" style="color:var(--text3)">Ready</span>
+        <div class="prog-wrap"><div class="prog" id="t-pb"></div></div>
+        <span id="t-acc" style="font-family:'Space Mono',monospace;font-size:10px">0 accepted</span>
+      </div>
+    </div>
+  </div><!-- /tc-tagger -->
+
+
+  <!-- ===== TAB: PLUGINS ===== -->
+  <div id="tc-plugins" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">extension</span>
+        <span class="panel-title">Obsidian Plugin Integration</span>
+      </div>
+      <div class="panel-body">
+        <div class="info-box" style="margin-bottom:14px">
+          <span class="mi material-icons-round">info</span>
+          These integrations inject plugin-compatible syntax into AI-generated notes. Enable a plugin to have NoteForge automatically use the correct format when generating content.
+        </div>
+
+        <div class="plugin-grid">
+
+          <!-- Tasks Plugin -->
+          <div class="plugin-card">
+            <div class="plugin-name">
+              <span class="mi material-icons-round" style="color:var(--accent3)">task_alt</span>
+              Obsidian Tasks
+            </div>
+            <div class="plugin-desc">Full integration with the Obsidian Tasks plugin. Generated notes use the correct task format with due dates, priorities, recurrences, and completion tracking.</div>
+            <div class="plugin-features">
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Tasks with due dates: <code style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan)"> - [ ] Task text [due:: 2025-01-15]</code></div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Priority markers: high, medium, low via Tasks plugin icons</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Recurrence rules: <code style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan)">[repeat:: every week]</code></div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Tags on tasks: <code style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan)">#work/project-alpha</code></div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Tomorrow's intentions auto-converted to tasks</div>
+            </div>
+            <div class="plugin-footer">
+              <label class="tog" onclick="event.stopPropagation()">
+                <input type="checkbox" id="plug-tasks" checked onchange="savePluginState()">
+                <div class="tog-sl"></div>
+              </label>
+              <span class="plugin-status active" id="plug-tasks-status">Enabled</span>
+              <a href="https://github.com/obsidian-tasks-group/obsidian-tasks" target="_blank" style="margin-left:auto"><button class="btn sm cyan"><span class="mi material-icons-round">open_in_new</span> GitHub</button></a>
+            </div>
+          </div>
+
+          <!-- Calendar Plugin -->
+          <div class="plugin-card">
+            <div class="plugin-name">
+              <span class="mi material-icons-round" style="color:var(--gold)">calendar_month</span>
+              Calendar Plugin
+            </div>
+            <div class="plugin-desc">Integration with the obsidian-calendar-plugin by Liam Cain. Notes are named and structured so they appear correctly in the Calendar view with due-date markers.</div>
+            <div class="plugin-features">
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Daily note filenames match Calendar's expected format</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> YAML <code style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan)">date:</code> field populated correctly</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Weekly note headers added on Fridays</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Monthly summary prompts on last day of month</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Calendar view shows note dots for days with entries</div>
+            </div>
+            <div class="plugin-footer">
+              <label class="tog" onclick="event.stopPropagation()">
+                <input type="checkbox" id="plug-cal" checked onchange="savePluginState()">
+                <div class="tog-sl"></div>
+              </label>
+              <span class="plugin-status active" id="plug-cal-status">Enabled</span>
+              <a href="https://github.com/liamcain/obsidian-calendar-plugin" target="_blank" style="margin-left:auto"><button class="btn sm cyan"><span class="mi material-icons-round">open_in_new</span> GitHub</button></a>
+            </div>
+          </div>
+
+          <!-- Dataview Plugin -->
+          <div class="plugin-card">
+            <div class="plugin-name">
+              <span class="mi material-icons-round" style="color:var(--green)">table_chart</span>
+              Dataview
+            </div>
+            <div class="plugin-desc">Every generated note includes Dataview-compatible YAML frontmatter so you can query your notes like a database.</div>
+            <div class="plugin-features">
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Full YAML frontmatter on every note</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Fields: date, tags, mood, energy, focus, related, type</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Inline Dataview fields where appropriate</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Sample queries injected as code blocks in notes</div>
+            </div>
+            <div class="plugin-footer">
+              <label class="tog" onclick="event.stopPropagation()">
+                <input type="checkbox" id="plug-dv" checked onchange="savePluginState()">
+                <div class="tog-sl"></div>
+              </label>
+              <span class="plugin-status active" id="plug-dv-status">Enabled</span>
+            </div>
+          </div>
+
+          <!-- Periodic Notes -->
+          <div class="plugin-card">
+            <div class="plugin-name">
+              <span class="mi material-icons-round" style="color:var(--cyan)">event_repeat</span>
+              Periodic Notes
+            </div>
+            <div class="plugin-desc">Enhanced support for daily, weekly, monthly, and quarterly note templates compatible with the Periodic Notes plugin.</div>
+            <div class="plugin-features">
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Weekly review section added automatically on Fridays</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Monthly summary on last day of month</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Quarter review headers on Q boundary dates</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Correct folder structure: Daily/Weekly/Monthly</div>
+            </div>
+            <div class="plugin-footer">
+              <label class="tog" onclick="event.stopPropagation()">
+                <input type="checkbox" id="plug-periodic" onchange="savePluginState()">
+                <div class="tog-sl"></div>
+              </label>
+              <span class="plugin-status" id="plug-periodic-status">Disabled</span>
+            </div>
+          </div>
+
+          <!-- Templater -->
+          <div class="plugin-card">
+            <div class="plugin-name">
+              <span class="mi material-icons-round" style="color:var(--accent3)">auto_fix_high</span>
+              Templater
+            </div>
+            <div class="plugin-desc">Inserts Templater-compatible variable syntax and dynamic expressions into generated notes where appropriate.</div>
+            <div class="plugin-features">
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> <code style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan)">&lt;% tp.date.now() %&gt;</code> date expressions</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Dynamic file title and link generation</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> User-defined Templater variables in prompts</div>
+            </div>
+            <div class="plugin-footer">
+              <label class="tog" onclick="event.stopPropagation()">
+                <input type="checkbox" id="plug-templater" onchange="savePluginState()">
+                <div class="tog-sl"></div>
+              </label>
+              <span class="plugin-status" id="plug-templater-status">Disabled</span>
+            </div>
+          </div>
+
+          <!-- Kanban -->
+          <div class="plugin-card">
+            <div class="plugin-name">
+              <span class="mi material-icons-round" style="color:var(--orange)">view_kanban</span>
+              Kanban
+            </div>
+            <div class="plugin-desc">Injects a Kanban-compatible code block for daily task tracking using the Obsidian Kanban plugin format.</div>
+            <div class="plugin-features">
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Kanban board embedded in daily note</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Columns: Backlog, In Progress, Done</div>
+              <div class="plugin-feature"><span class="mi material-icons-round">check</span> Tasks pulled from Tomorrow section into Backlog</div>
+            </div>
+            <div class="plugin-footer">
+              <label class="tog" onclick="event.stopPropagation()">
+                <input type="checkbox" id="plug-kanban" onchange="savePluginState()">
+                <div class="tog-sl"></div>
+              </label>
+              <span class="plugin-status" id="plug-kanban-status">Disabled</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:16px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Plugin Installation Guide</div>
+          <div class="warn-box">
+            <span class="mi material-icons-round">info</span>
+            <div>These plugins must be installed separately in Obsidian: Settings &rarr; Community Plugins &rarr; Browse. Search for each plugin by name and install. NoteForge injects the correct syntax into notes; the plugins render and process that syntax inside Obsidian.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tc-plugins -->
+
+
+  <!-- ===== TAB: CALENDAR ===== -->
+  <div id="tc-calendar" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">calendar_month</span>
+        <span class="panel-title">Note Calendar</span>
+        <div class="panel-actions">
+          <button class="btn sm" onclick="calPrev()"><span class="mi material-icons-round">chevron_left</span></button>
+          <button class="btn sm" onclick="calNext()"><span class="mi material-icons-round">chevron_right</span></button>
+          <button class="btn sm" onclick="calToday()"><span class="mi material-icons-round">today</span> Today</button>
+          <button class="btn sm primary" onclick="loadCalendar()"><span class="mi material-icons-round">refresh</span> Sync Vault</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="cal-nav">
+          <span class="cal-month" id="cal-month-label">January 2025</span>
+          <div style="display:flex;gap:8px;font-size:11px;color:var(--text3)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent3);display:inline-block"></span> Has note</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--gold);display:inline-block"></span> Has tasks</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span> Overdue tasks</span>
+          </div>
+        </div>
+        <div class="cal-header">
+          <div class="cal-header-day">Sun</div><div class="cal-header-day">Mon</div>
+          <div class="cal-header-day">Tue</div><div class="cal-header-day">Wed</div>
+          <div class="cal-header-day">Thu</div><div class="cal-header-day">Fri</div>
+          <div class="cal-header-day">Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div style="margin-top:12px;font-size:11px;color:var(--text3);text-align:center" id="cal-hint">Click a day to load or create a note for that date.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">task_alt</span>
+        <span class="panel-title">Upcoming Tasks</span>
+        <div class="panel-actions">
+          <button class="btn sm primary" onclick="loadTasks()"><span class="mi material-icons-round">refresh</span> Scan Vault</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="info-box" style="margin-bottom:11px">
+          <span class="mi material-icons-round">info</span>
+          Tasks are scanned from your vault using the Obsidian Tasks plugin format. Due dates, priorities, and recurrences are parsed and displayed here.
+        </div>
+        <div id="tasks-filters" style="display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap">
+          <button class="btn sm" id="tf-all" onclick="filterTasks('all',this)"><span class="mi material-icons-round">list</span> All</button>
+          <button class="btn sm" id="tf-due" onclick="filterTasks('due',this)"><span class="mi material-icons-round">event</span> Due Soon</button>
+          <button class="btn sm danger" id="tf-overdue" onclick="filterTasks('overdue',this)"><span class="mi material-icons-round">warning</span> Overdue</button>
+          <button class="btn sm gold" id="tf-high" onclick="filterTasks('high',this)"><span class="mi material-icons-round">priority_high</span> High Priority</button>
+          <button class="btn sm" id="tf-undated" onclick="filterTasks('undated',this)"><span class="mi material-icons-round">remove</span> No Due Date</button>
+        </div>
+        <div class="tasks-list" id="tasks-list"><div style="color:var(--text3);font-size:12px;text-align:center;padding:18px">Click "Scan Vault" to load tasks from your notes.</div></div>
+      </div>
+    </div>
+  </div><!-- /tc-calendar -->
+
+
+  <!-- ===== TAB: CONFIG ===== -->
+  <div id="tc-config" class="tc">
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">smart_toy</span>
+        <span class="panel-title">AI Provider</span>
+      </div>
+      <div class="panel-body">
+        <div class="provider-tabs">
+          <div class="ptab active" id="ptab-ollama" onclick="setProvider('ollama')"><span class="mi material-icons-round">memory</span> Ollama (Local)</div>
+          <div class="ptab" id="ptab-nvidia" onclick="setProvider('nvidia')"><span class="mi material-icons-round">developer_board</span> NVIDIA AI (Cloud)</div>
+          <div class="ptab" id="ptab-openai" onclick="setProvider('openai')"><span class="mi material-icons-round">cloud</span> OpenAI-Compatible</div>
+        </div>
+
+        <!-- Ollama Panel -->
+        <div class="provider-panel active" id="pp-ollama">
+          <div class="info-box" style="margin-bottom:11px"><span class="mi material-icons-round">info</span> Ollama runs models locally. No API key required. All data stays on your machine. Install from <strong>ollama.com</strong> then run <code style="font-family:'Space Mono',monospace;font-size:11px">ollama pull llama3</code></div>
+          <div class="grid3">
+            <div class="fg"><label>Ollama Host</label><input type="text" id="cfg-ollama-host" value="http://localhost:11434"/></div>
+            <div class="fg"><label>Model</label><input type="text" id="cfg-ollama-model" value="llama3" placeholder="llama3, mistral, gemma2..."/></div>
+            <div class="fg"><label>Temperature</label><input type="number" id="cfg-ollama-temp" min="0" max="2" step="0.05" value="0.75"/></div>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn sm" onclick="pingOllama()"><span class="mi material-icons-round">sensors</span> Ping Ollama</button>
+            <button class="btn sm cyan" onclick="listOllamaModels()"><span class="mi material-icons-round">list</span> List Available Models</button>
+          </div>
+          <div id="ollama-models-list" style="display:none;margin-top:10px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700;letter-spacing:.07em;text-transform:uppercase">Installed Models</div>
+            <div id="ollama-models" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+          </div>
+        </div>
+
+        <!-- NVIDIA Panel -->
+        <div class="provider-panel" id="pp-nvidia">
+          <div class="info-box" style="margin-bottom:11px"><span class="mi material-icons-round">info</span> NVIDIA AI uses the NIM API (api.nvidia.com). Get a free API key at <strong>build.nvidia.com</strong>. Supports Llama, Mistral, Nemotron, and NVIDIA-optimized models.</div>
+          <div class="grid3">
+            <div class="fg full" style="grid-column:1/-1"><label>NVIDIA API Key</label>
+              <div class="pass-wrap">
+                <input type="password" id="cfg-nvidia-key" placeholder="nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"/>
+                <span class="pass-eye mi material-icons-round" onclick="togglePassVis('cfg-nvidia-key',this)">visibility</span>
+              </div>
+            </div>
+            <div class="fg"><label>Model</label>
+              <select id="cfg-nvidia-model">
+                <option value="meta/llama-3.1-70b-instruct">Llama 3.1 70B Instruct</option>
+                <option value="meta/llama-3.1-8b-instruct">Llama 3.1 8B Instruct</option>
+                <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B Instruct</option>
+                <option value="nvidia/llama-3.1-nemotron-70b-instruct">Nemotron 70B Instruct</option>
+                <option value="mistralai/mistral-large-2-instruct">Mistral Large 2</option>
+                <option value="mistralai/mixtral-8x7b-instruct-v0.1">Mixtral 8x7B</option>
+                <option value="google/gemma-2-27b-it">Gemma 2 27B</option>
+                <option value="microsoft/phi-3-medium-128k-instruct">Phi-3 Medium 128K</option>
+                <option value="custom">Custom model string...</option>
+              </select>
+            </div>
+            <div class="fg" id="nvidia-custom-grp" style="display:none"><label>Custom Model String</label><input type="text" id="cfg-nvidia-custom" placeholder="org/model-name"/></div>
+            <div class="fg"><label>Temperature</label><input type="number" id="cfg-nvidia-temp" min="0" max="2" step="0.05" value="0.7"/></div>
+            <div class="fg"><label>Max Tokens</label><input type="number" id="cfg-nvidia-tokens" value="4096"/></div>
+          </div>
+          <button class="btn sm" style="margin-top:8px" onclick="pingNvidia()"><span class="mi material-icons-round">sensors</span> Test NVIDIA API Key</button>
+        </div>
+
+        <!-- OpenAI-Compatible Panel -->
+        <div class="provider-panel" id="pp-openai">
+          <div class="info-box" style="margin-bottom:11px"><span class="mi material-icons-round">info</span> Connect to any OpenAI-compatible API: OpenAI, Groq, Together AI, LM Studio, etc.</div>
+          <div class="grid3">
+            <div class="fg full" style="grid-column:1/-1"><label>API Key</label>
+              <div class="pass-wrap">
+                <input type="password" id="cfg-oai-key" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"/>
+                <span class="pass-eye mi material-icons-round" onclick="togglePassVis('cfg-oai-key',this)">visibility</span>
+              </div>
+            </div>
+            <div class="fg"><label>Base URL</label><input type="text" id="cfg-oai-base" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1"/></div>
+            <div class="fg"><label>Model</label><input type="text" id="cfg-oai-model" placeholder="gpt-4o, llama-3.1-70b, etc."/></div>
+            <div class="fg"><label>Temperature</label><input type="number" id="cfg-oai-temp" min="0" max="2" step="0.05" value="0.75"/></div>
+            <div class="fg"><label>Max Tokens</label><input type="number" id="cfg-oai-tokens" value="4096"/></div>
+          </div>
+          <button class="btn sm" style="margin-top:8px" onclick="pingOpenAI()"><span class="mi material-icons-round">sensors</span> Test API Connection</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">folder_open</span>
+        <span class="panel-title">Vault &amp; Paths</span>
+        <div class="panel-actions">
+          <button class="btn primary" onclick="saveConfig()"><span class="mi material-icons-round">save</span> Save All Config</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="cfg-grid">
+          <div class="fg"><label>Backend URL</label><input type="text" id="cfg-backend" value="http://localhost:5000"/></div>
+          <div class="fg"><label>Obsidian Vault Path</label><input type="text" id="cfg-vault" value="~/obsidian-vault"/></div>
+          <div class="fg"><label>Daily Notes Folder</label><input type="text" id="cfg-folder" value="Daily Notes"/></div>
+          <div class="fg"><label>Ideas Folder</label><input type="text" id="cfg-ideas-folder" value="Ideas"/></div>
+          <div class="fg"><label>Queries Folder</label><input type="text" id="cfg-queries-folder" value="Queries"/></div>
+          <div class="fg"><label>Date Format</label>
+            <select id="cfg-dateformat">
+              <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+              <option value="DD-MM-YYYY">DD-MM-YYYY</option>
+              <option value="MM-DD-YYYY">MM-DD-YYYY</option>
+              <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+            </select>
+          </div>
+          <div class="fg"><label>Auto-open in Obsidian</label>
+            <select id="cfg-autoopen">
+              <option value="true">Yes — open after send</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="fg"><label>Linker Min Snippet Length</label><input type="number" id="cfg-linker-minlen" value="200"/></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tc-config -->
+
+
+  <!-- ===== TAB: OBSIDIAN FEATURES ===== -->
+  <div id="tc-obsidian" class="tc">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">auto_awesome</span>
+        <span class="panel-title">Obsidian Feature Injections</span>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Toggle which Obsidian-specific features the AI includes in generated notes. Enabled features are automatically appended to the system prompt.</p>
+        <div class="feat-grid" id="feat-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: LOGS ===== -->
+  <div id="tc-logs" class="tc">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="mi material-icons-round panel-icon">terminal</span>
+        <span class="panel-title">Server Logs</span>
+        <div class="panel-actions">
+          <button class="btn sm danger" onclick="clearLogs()"><span class="mi material-icons-round">delete</span> Clear</button>
+        </div>
+      </div>
+      <div class="panel-body"><div class="log-box" id="log-box"><div class="ll"><span class="lt">00:00:00</span><span class="li">[INFO]</span><span>NoteForge ready.</span></div></div></div>
+    </div>
+  </div>
+
+</main><!-- /main -->
+</div><!-- /shell -->
+
+<div class="snackbar" id="snackbar">
+  <span class="mi material-icons-round" id="snack-icon">check_circle</span>
+  <span id="snack-msg">Done</span>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────
+const S = {
+  notes:   JSON.parse(localStorage.getItem('nf_notes')  ||'[]'),
+  ideas:   JSON.parse(localStorage.getItem('nf_ideas')  ||'[]'),
+  cfg:     JSON.parse(localStorage.getItem('nf_cfg')    ||'{}'),
+  stats:   JSON.parse(localStorage.getItem('nf_stats')  ||'{"total":0,"sent":0,"links":0,"tags":0,"streak":0}'),
+  plugins: JSON.parse(localStorage.getItem('nf_plugins')||'{"tasks":true,"cal":true,"dv":true,"periodic":false,"templater":false,"kanban":false}'),
+  tags:    {compose:[],idea:[]},
+  lastNote:null, lastIdea:null, lastQuery:null,
+  linkSugs:[], tagSugs:[],
+  calYear:new Date().getFullYear(), calMonth:new Date().getMonth(),
+  calNotes:{}, tasks:[],
+  currentTab:'compose', provider:'ollama',
+};
+
+const DCFG = {
+  backend:'http://localhost:5000', vault:'~/obsidian-vault',
+  folder:'Daily Notes', ideasFolder:'Ideas', queriesFolder:'Queries',
+  dateformat:'YYYY-MM-DD', autoopen:'true', linkerMinLen:200,
+  ollama:{host:'http://localhost:11434',model:'llama3',temp:0.75},
+  nvidia:{key:'',model:'meta/llama-3.1-70b-instruct',temp:0.7,tokens:4096,custom:''},
+  openai:{key:'',base:'https://api.openai.com/v1',model:'gpt-4o',temp:0.75,tokens:4096},
+};
+
+const TAB_TITLES = {
+  compose:'Daily Note Compose', ideas:'Ideas and Thoughts', query:'Vault Query',
+  history:'Note History', preview:'Generated Preview', linker:'Auto Linker',
+  tagger:'Tag Generator', plugins:'Plugin Support', calendar:'Calendar and Tasks',
+  config:'Configuration', obsidian:'Obsidian Features', logs:'Server Logs',
+};
+
+const FEATS = [
+  {id:'mindmap',  icon:'account_tree',    c:'#7c6af7', name:'Mermaid Mind Map',     desc:'mindmap diagram of day themes', on:true},
+  {id:'timeline', icon:'timeline',         c:'#67e8f9', name:'Mermaid Timeline',     desc:'timeline of key events',        on:true},
+  {id:'dataview', icon:'table_chart',      c:'#4ade80', name:'Dataview Frontmatter', desc:'Full YAML for Dataview plugin', on:true},
+  {id:'callouts', icon:'tips_and_updates', c:'#f0c060', name:'Callout Blocks',       desc:'[!insight] [!tip] [!warning]',  on:true},
+  {id:'tasks',    icon:'task_alt',         c:'#4ade80', name:'Tasks Plugin Format',  desc:'- [ ] tasks with due dates',    on:true},
+  {id:'wikilinks',icon:'link',             c:'#c084fc', name:'Wiki Links',           desc:'[[wikilinks]] auto-generated',  on:true},
+  {id:'graph',    icon:'bubble_chart',     c:'#67e8f9', name:'Graph Tags',           desc:'Tags for graph clustering',     on:true},
+  {id:'kanban',   icon:'view_kanban',      c:'#fb923c', name:'Kanban Card',          desc:'Embedded kanban snippet',       on:false},
+  {id:'periodic', icon:'event_repeat',     c:'#7c6af7', name:'Periodic Notes',       desc:'Weekly/monthly review prompts', on:true},
+  {id:'spaced',   icon:'psychology',       c:'#c084fc', name:'Spaced Repetition',    desc:'Flag learnings for Anki',       on:false},
+  {id:'breadcrumb',icon:'device_hub',      c:'#4ade80', name:'Breadcrumbs',          desc:'parent/child metadata',         on:false},
+  {id:'templater',icon:'auto_fix_high',    c:'#67e8f9', name:'Templater Vars',       desc:'Templater variable syntax',     on:false},
+];
+
+const PRESETS = {
+  journal:`You are a wise journaling companion. Expand raw notes into a deeply personal long-form journal (800+ words). Explore emotions, uncover insights, connect to values and goals. Include: gratitude section, emotional analysis, Letter to Future Self paragraph, key realizations. Add Mermaid mindmap and [[wikilinks]]. YAML frontmatter required. Output raw Markdown only.`,
+  dev:`You are a senior developer writing an engineering log. Transform raw notes into a structured Engineering Log. Include: what was built/fixed, technical decisions, architecture notes, debugging sessions, learnings, TODOs with Tasks plugin format, [[wikilinks]] to concepts. Add a Mermaid diagram. 700+ words. Raw Markdown only.`,
+  executive:`Executive daily briefing: top 3 decisions, metrics, stakeholder updates, risks, action items with owners and due dates. Tables where appropriate. Full Dataview YAML. 600+ words. Raw Markdown only.`,
+  stoic:`Stoic evening reflection journal. Include: Memento Mori opening, dichotomy of control analysis, what was within vs outside control, virtue log, evening meditation, relevant Marcus Aurelius or Epictetus quote. Mermaid mindmap. 700+ words. Raw Markdown only.`,
+  creative:`Creative life journal. Evocative language, metaphors, narrative. Include: creative spark of the day, obstacles as gifts, aesthetic observations, inspiration catalogue, ideas seeded. 800+ words. Raw Markdown only.`,
+  minimal:`Clean minimal note under 300 words: 3-sentence summary, wins, blockers, tomorrow top 3. YAML frontmatter only. Raw Markdown only.`,
+};
+
+// ─── INIT ──────────────────────────────────────────────────────────
+(function init(){
+  const now = new Date();
+  document.getElementById('page-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('n-date').value = now.toISOString().split('T')[0];
+  loadCfgToUI();
+  renderFeats();
+  renderHistory();
+  renderIdeaList();
+  updateStats();
+  setupTags('compose');
+  setupTags('idea');
+  loadPluginState();
+  renderCalendar();
+  document.getElementById('cfg-nvidia-model').addEventListener('change',function(){
+    document.getElementById('nvidia-custom-grp').style.display=this.value==='custom'?'':'none';
+  });
+  log('info','NoteForge ready.');
+  silentPing();
+})();
+
+// ─── TABS ──────────────────────────────────────────────────────────
+function goTab(name,el){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const tc=document.getElementById('tc-'+name);
+  if(tc) tc.classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('page-title').textContent=TAB_TITLES[name]||name;
+  S.currentTab=name;
+  const btn=document.getElementById('primary-btn');
+  const map={compose:['send','Generate &amp; Send'],ideas:['auto_awesome','Elaborate Idea'],query:['manage_search','Run Query'],linker:['auto_fix_high','Scan Vault'],tagger:['sell','Generate Tags'],calendar:['refresh','Sync Vault'],plugins:['extension','Save Plugin Config']};
+  const [ic,lb]=map[name]||['send','Action'];
+  btn.innerHTML=`<span class="mi material-icons-round">${ic}</span> ${lb}`;
+}
+
+function primaryAction(){
+  const map={compose:genNote,ideas:elaborateIdea,query:runQuery,linker:runLinker,tagger:runTagger,calendar:loadCalendar,plugins:savePluginState};
+  const fn=map[S.currentTab];
+  if(fn) fn();
+}
+
+// ─── CFG ──────────────────────────────────────────────────────────
+function getCfg(){ return Object.assign({},DCFG,S.cfg); }
+
+function loadCfgToUI(){
+  const c=getCfg();
+  V('cfg-backend',c.backend); V('cfg-vault',c.vault); V('cfg-folder',c.folder);
+  V('cfg-ideas-folder',c.ideasFolder); V('cfg-queries-folder',c.queriesFolder);
+  V('cfg-dateformat',c.dateformat); V('cfg-autoopen',c.autoopen);
+  V('cfg-linker-minlen',c.linkerMinLen);
+  const ol=c.ollama||DCFG.ollama; V('cfg-ollama-host',ol.host); V('cfg-ollama-model',ol.model); V('cfg-ollama-temp',ol.temp);
+  const nv=c.nvidia||DCFG.nvidia; V('cfg-nvidia-key',nv.key||''); V('cfg-nvidia-model',nv.model); V('cfg-nvidia-temp',nv.temp); V('cfg-nvidia-tokens',nv.tokens);
+  const oa=c.openai||DCFG.openai; V('cfg-oai-key',oa.key||''); V('cfg-oai-base',oa.base); V('cfg-oai-model',oa.model); V('cfg-oai-temp',oa.temp); V('cfg-oai-tokens',oa.tokens);
+  const prov=c.provider||'ollama'; setProvider(prov,true);
+  document.getElementById('model-label').textContent=getActiveModel();
+  document.getElementById('vault-label').textContent=(c.vault||'').split(/[/\\]/).pop()||c.vault||'~/vault';
+  document.getElementById('vault-label').title=c.vault||'';
+  document.getElementById('provider-label').textContent=({ollama:'Ollama',nvidia:'NVIDIA',openai:'OpenAI/Compat'})[prov]||'Ollama';
+}
+
+function saveConfig(){
+  S.cfg={
+    backend:G('cfg-backend'),vault:G('cfg-vault'),folder:G('cfg-folder'),
+    ideasFolder:G('cfg-ideas-folder'),queriesFolder:G('cfg-queries-folder'),
+    dateformat:G('cfg-dateformat'),autoopen:G('cfg-autoopen'),
+    linkerMinLen:parseInt(G('cfg-linker-minlen'))||200,
+    provider:S.provider,
+    ollama:{host:G('cfg-ollama-host'),model:G('cfg-ollama-model'),temp:parseFloat(G('cfg-ollama-temp'))||0.75},
+    nvidia:{key:G('cfg-nvidia-key'),model:G('cfg-nvidia-model')==='custom'?G('cfg-nvidia-custom'):G('cfg-nvidia-model'),temp:parseFloat(G('cfg-nvidia-temp'))||0.7,tokens:parseInt(G('cfg-nvidia-tokens'))||4096},
+    openai:{key:G('cfg-oai-key'),base:G('cfg-oai-base'),model:G('cfg-oai-model'),temp:parseFloat(G('cfg-oai-temp'))||0.75,tokens:parseInt(G('cfg-oai-tokens'))||4096},
+  };
+  localStorage.setItem('nf_cfg',JSON.stringify(S.cfg));
+  loadCfgToUI();
+  snack('Configuration saved','success');
+  log('ok','Config saved. Provider: '+S.provider+' Model: '+getActiveModel());
+}
+
+function getActiveModel(){
+  const c=getCfg(); const p=c.provider||S.provider||'ollama';
+  if(p==='nvidia') return (c.nvidia||DCFG.nvidia).model||'llama3.1-70b';
+  if(p==='openai') return (c.openai||DCFG.openai).model||'gpt-4o';
+  return (c.ollama||DCFG.ollama).model||'llama3';
+}
+
+function getProviderCfg(){
+  const c=getCfg(); const p=c.provider||S.provider||'ollama';
+  if(p==='nvidia') return {provider:'nvidia',...(c.nvidia||DCFG.nvidia)};
+  if(p==='openai') return {provider:'openai',...(c.openai||DCFG.openai)};
+  return {provider:'ollama',...(c.ollama||DCFG.ollama)};
+}
+
+function setProvider(p,silent){
+  S.provider=p;
+  ['ollama','nvidia','openai'].forEach(x=>{
+    document.getElementById('ptab-'+x)?.classList.toggle('active',x===p);
+    document.getElementById('pp-'+x)?.classList.toggle('active',x===p);
+  });
+  if(!silent) document.getElementById('provider-label').textContent=({ollama:'Ollama',nvidia:'NVIDIA',openai:'OpenAI/Compat'})[p]||p;
+}
+
+function togglePassVis(id,icon){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.type=el.type==='password'?'text':'password';
+  icon.textContent=el.type==='password'?'visibility':'visibility_off';
+}
+
+// ─── TAGS INPUT ─────────────────────────────────────────────────────
+function setupTags(ns){
+  const inp=document.getElementById('ti-'+ns);
+  if(!inp) return;
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===','){
+      e.preventDefault();
+      const v=inp.value.trim().replace(/,/g,'').replace(/^#/,'');
+      if(v&&!S.tags[ns].includes(v)){S.tags[ns].push(v);renderTags(ns);}
+      inp.value='';
+    } else if(e.key==='Backspace'&&!inp.value&&S.tags[ns].length){
+      S.tags[ns].pop();renderTags(ns);
+    }
+  });
+}
+
+function renderTags(ns){
+  const wrap=document.getElementById('tw-'+ns);
+  const inp=document.getElementById('ti-'+ns);
+  wrap.querySelectorAll('.tag-chip').forEach(t=>t.remove());
+  S.tags[ns].forEach((t,i)=>{
+    const c=document.createElement('div');
+    c.className='tag-chip';
+    c.innerHTML=`#${e(t)}<span class="rx" onclick="rmTag('${ns}',${i})">x</span>`;
+    wrap.insertBefore(c,inp);
+  });
+}
+
+function rmTag(ns,i){S.tags[ns].splice(i,1);renderTags(ns);}
+
+// ─── MOOD ──────────────────────────────────────────────────────────
+function pickMood(el){
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function getMood(){
+  const b=document.querySelector('.mood-btn.sel');
+  return b?b.dataset.mood:'Not specified';
+}
+
+// ─── OBSIDIAN FEATURES ─────────────────────────────────────────────
+function renderFeats(){
+  const g=document.getElementById('feat-grid');
+  g.innerHTML=FEATS.map((f,i)=>`
+    <div class="feat-card ${f.on?'on':''}" id="fc-${f.id}" onclick="toggleFeat(${i})">
+      <div class="feat-icon" style="background:${f.c}22"><span class="mi material-icons-round" style="color:${f.c}">${f.icon}</span></div>
+      <div style="flex:1"><div class="feat-name">${f.name}</div><div class="feat-desc">${f.desc}</div></div>
+      <label class="tog" onclick="event.stopPropagation()">
+        <input type="checkbox" ${f.on?'checked':''} onchange="toggleFeatById('${f.id}')">
+        <div class="tog-sl"></div>
+      </label>
+    </div>`).join('');
+}
+
+function toggleFeat(i){FEATS[i].on=!FEATS[i].on;renderFeats();}
+function toggleFeatById(id){const f=FEATS.find(x=>x.id===id);if(f)f.on=!f.on;renderFeats();}
+function getEnabledFeats(){return FEATS.filter(f=>f.on).map(f=>f.name);}
+
+// ─── PLUGINS ──────────────────────────────────────────────────────
+function loadPluginState(){
+  ['tasks','cal','dv','periodic','templater','kanban'].forEach(id=>{
+    const el=document.getElementById('plug-'+id);
+    if(el){el.checked=!!S.plugins[id];}
+    const st=document.getElementById('plug-'+id+'-status');
+    if(st){st.textContent=S.plugins[id]?'Enabled':'Disabled';st.className='plugin-status'+(S.plugins[id]?' active':'');}
+  });
+}
+
+function savePluginState(){
+  ['tasks','cal','dv','periodic','templater','kanban'].forEach(id=>{
+    const el=document.getElementById('plug-'+id);
+    if(el) S.plugins[id]=el.checked;
+    const st=document.getElementById('plug-'+id+'-status');
+    if(st){st.textContent=S.plugins[id]?'Enabled':'Disabled';st.className='plugin-status'+(S.plugins[id]?' active':'');}
+  });
+  localStorage.setItem('nf_plugins',JSON.stringify(S.plugins));
+  snack('Plugin settings saved','success');
+  log('ok','Plugins saved: '+JSON.stringify(S.plugins));
+}
+
+function getPluginInstructions(){
+  const parts=[];
+  if(S.plugins.tasks) parts.push('Use Obsidian Tasks plugin format for all tasks: "- [ ] Task text" followed by due date in [due:: YYYY-MM-DD] format, with priority and recurrence rules per the Tasks plugin spec.');
+  if(S.plugins.cal)   parts.push('Use Calendar plugin compatible date format in frontmatter. Include weekly review section if this is a Friday note.');
+  if(S.plugins.dv)    parts.push('Include comprehensive Dataview-compatible YAML frontmatter with all metadata fields.');
+  if(S.plugins.periodic) parts.push('Add periodic notes structure: weekly review on Fridays, monthly summary on last day of month.');
+  if(S.plugins.templater) parts.push('Include Templater variable syntax where appropriate for dynamic content.');
+  if(S.plugins.kanban) parts.push('Include a Kanban board code block with columns: Backlog | In Progress | Done.');
+  return parts.join('\n');
+}
+
+// ─── API HELPER ────────────────────────────────────────────────────
+async function apiPost(endpoint,body){
+  const cfg=getCfg();
+  const res=await fetch(cfg.backend+endpoint,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({...body,config:{...cfg,...getProviderCfg()},plugin_instructions:getPluginInstructions()}),
+  });
+  if(!res.ok){const err=await res.json().catch(()=>({error:'HTTP '+res.status}));throw new Error(err.error||'HTTP '+res.status);}
+  return res.json();
+}
+
+async function apiGet(endpoint,params){
+  const cfg=getCfg();
+  const qs=params?'?'+new URLSearchParams({...params,vault:cfg.vault,folder:cfg.folder}):'';
+  const res=await fetch(cfg.backend+endpoint+qs);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+
+// ─── GENERATE DAILY NOTE ───────────────────────────────────────────
+async function genNote(){
+  const body=G('n-body').trim();
+  if(!body){snack('Write something in the entry body first','error');return;}
+
+  const sp=G('sp-compose').trim();
+  const plugInstr=getPluginInstructions();
+  const fullSp=plugInstr?sp+'\n\nPLUGIN FORMAT REQUIREMENTS:\n'+plugInstr:sp;
+
+  const payload={
+    type:'daily',title:G('n-title'),date:G('n-date'),body,
+    mood:getMood(),energy:G('n-energy'),focus:G('n-focus'),
+    wins:G('n-wins'),blockers:G('n-blockers'),tomorrow:G('n-tomorrow'),
+    tags:S.tags.compose,links:G('n-links'),
+    system_prompt:fullSp,tone:G('n-tone'),length:G('n-length'),extra:G('n-extra'),
+    features:getEnabledFeats(),
+  };
+
+  setPb('main',true,'Generating note...');
+  document.getElementById('primary-btn').disabled=true;
+  goTab('preview',document.querySelector('.nav-item[data-tab="preview"]'));
+  document.querySelector('.nav-item[onclick="goTab(\'preview\',this)"]')?.classList.add('active');
+  log('info','POST /generate type=daily model='+getActiveModel());
+
+  try{
+    const data=await apiPost('/generate',payload);
+    S.lastNote=data;
+    document.getElementById('main-out').textContent=data.note;
+    document.getElementById('send-btn').disabled=false;
+    document.getElementById('main-wc').textContent=wc(data.note)+' words';
+    setPb('main',false,'Done — '+wc(data.note)+' words');
+    S.stats.total++;
+    addHist({title:payload.title||payload.date,date:payload.date,filename:data.filename,words:wc(data.note),type:'daily'});
+    saveStats();updateStats();
+    log('ok','Generated: '+data.filename+' ('+wc(data.note)+' words)');
+    snack('Note generated — '+wc(data.note)+' words','success');
+  } catch(err){
+    setPb('main',false,'Error');
+    document.getElementById('main-out').textContent='Error: '+err.message+'\n\nMake sure server.py is running:\n  python server.py';
+    log('err',err.message);snack(err.message,'error');
+  }
+  document.getElementById('primary-btn').disabled=false;
+}
+
+async function sendToObsidian(){
+  if(!S.lastNote) return;
+  setPb('main',true,'Sending to Obsidian...');
+  try{
+    const data=await apiPost('/send',S.lastNote);
+    S.stats.sent++;S.stats.streak=data.streak||S.stats.streak;
+    saveStats();updateStats();
+    setPb('main',false,'Saved: '+data.filename);
+    log('ok','Written: '+data.path);
+    snack('Saved to vault: '+data.filename,'success');
+  } catch(err){setPb('main',false,'Error');log('err',err.message);snack(err.message,'error');}
+}
+
+// ─── ELABORATE IDEA ────────────────────────────────────────────────
+async function elaborateIdea(){
+  const body=G('i-body').trim();
+  if(!body){snack('Write your idea first','error');return;}
+
+  const payload={
+    type:'idea',title:G('i-title'),category:G('i-cat'),body,
+    context:G('i-context'),tags:S.tags.idea,depth:G('i-depth'),
+    system_prompt:G('sp-idea').trim(),
+  };
+
+  document.getElementById('idea-out-panel').style.display='';
+  setSubPb('idea',true,'Elaborating...');
+  document.getElementById('primary-btn').disabled=true;
+  log('info','Elaborating idea: '+(payload.title||'untitled'));
+
+  try{
+    const data=await apiPost('/generate',payload);
+    S.lastIdea=data;
+    document.getElementById('idea-out').textContent=data.note;
+    document.getElementById('idea-wc').textContent=wc(data.note)+' words';
+    setSubPb('idea',false,'Done — '+wc(data.note)+' words');
+    S.stats.total++;
+    addHist({title:payload.title||'Idea',date:new Date().toISOString().split('T')[0],filename:data.filename,words:wc(data.note),type:'idea'});
+    saveStats();updateStats();
+    log('ok','Idea elaborated: '+data.filename);
+    snack('Idea elaborated — '+wc(data.note)+' words','success');
+  } catch(err){
+    setSubPb('idea',false,'Error');
+    document.getElementById('idea-out').textContent='Error: '+err.message;
+    log('err',err.message);snack(err.message,'error');
+  }
+  document.getElementById('primary-btn').disabled=false;
+}
+
+async function sendIdea(){
+  if(!S.lastIdea) return;
+  try{
+    const data=await apiPost('/send',{...S.lastIdea,folder_override:getCfg().ideasFolder});
+    S.stats.sent++;
+    S.ideas.unshift({title:S.lastIdea.title||'Idea',filename:data.filename,date:new Date().toISOString().split('T')[0]});
+    localStorage.setItem('nf_ideas',JSON.stringify(S.ideas));
+    renderIdeaList();saveStats();updateStats();
+    snack('Idea saved to vault','success');log('ok','Idea saved: '+data.path);
+  } catch(err){snack(err.message,'error');log('err',err.message);}
+}
+
+function clearIdea(){
+  ['i-title','i-body','i-context'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  S.tags.idea=[];renderTags('idea');
+  document.getElementById('idea-out-panel').style.display='none';
+}
+
+function renderIdeaList(){
+  const l=document.getElementById('idea-list');
+  if(!S.ideas.length){l.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px">No ideas saved yet.</div>';return;}
+  l.innerHTML=S.ideas.map(i=>`<div class="idea-card"><div class="idea-card-title">${e(i.title||'Untitled')}</div><div class="idea-card-meta">${e(i.filename||'')} &bull; ${i.date||''}</div></div>`).join('');
+}
+
+function clearIdeas(){if(!confirm('Clear saved ideas?'))return;S.ideas=[];localStorage.removeItem('nf_ideas');renderIdeaList();}
+
+// ─── VAULT QUERY ───────────────────────────────────────────────────
+async function runQuery(){
+  const q=G('q-input').trim();
+  if(!q){snack('Enter a query first','error');return;}
+
+  const payload={type:'query',query:q,scope:G('q-scope'),folder:G('q-folder'),maxnotes:G('q-maxnotes'),style:G('q-style')};
+
+  document.getElementById('q-result-panel').style.display='';
+  document.getElementById('q-save-panel').style.display='none';
+  setSubPb('q',true,'Scanning vault and querying...');
+  document.getElementById('primary-btn').disabled=true;
+  log('info','Vault query: '+q.substring(0,60));
+
+  try{
+    const data=await apiPost('/query',payload);
+    S.lastQuery=data;
+    document.getElementById('q-ans').textContent=data.answer;
+    document.getElementById('q-wc').textContent=wc(data.answer)+' words';
+    setSubPb('q',false,'Done — '+(data.sources||[]).length+' sources');
+    document.getElementById('q-sources').innerHTML=(data.sources||[]).map(s=>`<div class="source-chip"><span class="mi material-icons-round">description</span>${e(s)}</div>`).join('');
+    V('qs-title','Query — '+q.substring(0,50));
+    V('qs-folder',getCfg().queriesFolder);
+    S.stats.total++;saveStats();updateStats();
+    log('ok','Query answered. Sources: '+(data.sources||[]).length);
+    snack('Query complete','success');
+  } catch(err){
+    setSubPb('q',false,'Error');
+    document.getElementById('q-ans').textContent='Error: '+err.message;
+    log('err',err.message);snack(err.message,'error');
+  }
+  document.getElementById('primary-btn').disabled=false;
+}
+
+function showQuerySave(){document.getElementById('q-save-panel').style.display='';}
+
+async function confirmQuerySave(){
+  if(!S.lastQuery) return;
+  const title=G('qs-title').trim()||'Query Result';
+  const folder=G('qs-folder').trim();
+  const extra=G('qs-notes').trim();
+  const content=S.lastQuery.answer+(extra?'\n\n---\n\n'+extra:'');
+  try{
+    const data=await apiPost('/send',{note:content,filename:slugify(title)+'.md',title,folder_override:folder});
+    S.stats.sent++;saveStats();updateStats();
+    document.getElementById('q-save-panel').style.display='none';
+    addHist({title,date:new Date().toISOString().split('T')[0],filename:data.filename,words:wc(content),type:'query'});
+    snack('Query note saved to vault','success');log('ok','Query note: '+data.path);
+  } catch(err){snack(err.message,'error');log('err',err.message);}
+}
+
+// ─── AUTO LINKER ───────────────────────────────────────────────────
+async function runLinker(){
+  const payload={source:G('l-source'),threshold:G('l-thresh'),maxnotes:G('l-maxnotes'),mode:G('l-mode')};
+  document.getElementById('linker-res-panel').style.display='';
+  document.getElementById('linker-stats-panel').style.display='';
+  setSubPb('l',true,'Scanning vault...');
+  document.getElementById('primary-btn').disabled=true;
+  document.getElementById('apply-links-btn').disabled=true;
+  document.getElementById('link-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:14px">Scanning vault and finding contextual links...</div>';
+  log('info','Auto linker start. source='+(payload.source||'all'));
+
+  try{
+    const data=await apiPost('/link_suggest',payload);
+    S.linkSugs=(data.suggestions||[]).map(s=>({...s,state:'pending'}));
+    document.getElementById('linker-summary').textContent=S.linkSugs.length+' suggestions';
+    document.getElementById('scan-stats').innerHTML=`
+      <div class="scan-stat"><div class="scan-val">${data.notes_scanned||0}</div><div class="scan-lbl">Notes scanned</div></div>
+      <div class="scan-stat"><div class="scan-val">${S.linkSugs.length}</div><div class="scan-lbl">Link suggestions</div></div>
+      <div class="scan-stat"><div class="scan-val">${data.existing_links||0}</div><div class="scan-lbl">Existing links found</div></div>
+      <div class="scan-stat"><div class="scan-val">${data.vault_size||0}</div><div class="scan-lbl">Total vault notes</div></div>`;
+    renderLinks();
+    setSubPb('l',false,'Scan complete — '+S.linkSugs.length+' suggestions');
+    document.getElementById('apply-links-btn').disabled=S.linkSugs.length===0;
+    log('ok','Linker done. Suggestions: '+S.linkSugs.length);
+    snack(S.linkSugs.length+' link suggestions found','success');
+  } catch(err){
+    setSubPb('l',false,'Error');
+    document.getElementById('link-results').innerHTML='<div style="color:var(--red);font-size:12px;padding:14px">Error: '+e(err.message)+'</div>';
+    log('err',err.message);snack(err.message,'error');
+  }
+  document.getElementById('primary-btn').disabled=false;
+}
+
+function renderLinks(){
+  const el=document.getElementById('link-results');
+  if(!S.linkSugs.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:14px">No suggestions found.</div>';return;}
+  el.innerHTML=S.linkSugs.map((s,i)=>`
+    <div class="link-item ${s.state==='accepted'?'acc':s.state==='rejected'?'rej':''}" id="li-${i}">
+      <div style="flex:1">
+        <div class="link-file"><span class="mi material-icons-round" style="font-size:12px;vertical-align:middle;margin-right:3px">description</span>${e(s.source_file)} &rarr; [[${e(s.target_file)}]]</div>
+        <div class="link-reason">${e(s.reason)}</div>
+        <div class="link-score">Confidence: ${s.confidence||'—'} &bull; "${e((s.context||'').substring(0,80))}${(s.context||'').length>80?'...':''}"</div>
+      </div>
+      <div class="link-acts">
+        <button class="btn sm success" onclick="accLink(${i})"><span class="mi material-icons-round">check</span></button>
+        <button class="btn sm danger" onclick="rejLink(${i})"><span class="mi material-icons-round">close</span></button>
+      </div>
+    </div>`).join('');
+  updLinkCount();
+}
+
+function accLink(i){S.linkSugs[i].state='accepted';const el=document.getElementById('li-'+i);if(el){el.className='link-item acc';}updLinkCount();}
+function rejLink(i){S.linkSugs[i].state='rejected';const el=document.getElementById('li-'+i);if(el){el.className='link-item rej';}updLinkCount();}
+function acceptAllLinks(){S.linkSugs.forEach((_,i)=>accLink(i));}
+function rejectAllLinks(){S.linkSugs.forEach((_,i)=>rejLink(i));}
+function updLinkCount(){const n=S.linkSugs.filter(s=>s.state==='accepted').length;document.getElementById('l-acc').textContent=n+' accepted';document.getElementById('apply-links-btn').disabled=n===0;}
+
+async function applyLinks(){
+  const acc=S.linkSugs.filter(s=>s.state==='accepted');
+  if(!acc.length){snack('No links accepted','error');return;}
+  setSubPb('l',true,'Applying links...');
+  try{
+    const data=await apiPost('/link_apply',{suggestions:acc});
+    S.stats.links+=data.applied||acc.length;
+    saveStats();updateStats();
+    setSubPb('l',false,'Applied '+(data.applied||acc.length)+' links');
+    log('ok','Links applied: '+(data.applied||acc.length));
+    snack((data.applied||acc.length)+' links applied to vault','success');
+  } catch(err){setSubPb('l',false,'Error');log('err',err.message);snack(err.message,'error');}
+}
+
+// ─── TAG GENERATOR ─────────────────────────────────────────────────
+function taggerModeChange(){
+  const m=G('t-mode');
+  document.getElementById('t-paste-grp').style.display=m==='paste'?'':'none';
+  document.getElementById('t-file-grp').style.display=m==='file'?'':'none';
+}
+
+async function runTagger(){
+  const mode=G('t-mode');
+  const content=mode==='paste'?G('t-content').trim():'';
+  const file=mode==='file'?G('t-file').trim():'';
+  if(mode==='paste'&&!content){snack('Paste note content first','error');return;}
+  if(mode==='file'&&!file){snack('Enter a file path','error');return;}
+
+  const payload={mode,content,file,style:G('t-style'),count:G('t-count'),existing:G('t-existing')};
+  document.getElementById('tagger-res-panel').style.display='';
+  setSubPb('t',true,'Analyzing content...');
+  document.getElementById('primary-btn').disabled=true;
+  document.getElementById('tag-sug-container').innerHTML='';
+  document.getElementById('tag-reasoning-wrap').style.display='none';
+  log('info','Tag generator mode='+mode);
+
+  try{
+    const data=await apiPost('/generate_tags',payload);
+    S.tagSugs=(data.tags||[]).map(t=>({tag:t.tag||t,reason:t.reason||'',state:'pending'}));
+    renderTagSugs();
+    if(data.reasoning){document.getElementById('tag-reasoning').textContent=data.reasoning;document.getElementById('tag-reasoning-wrap').style.display='';}
+    setSubPb('t',false,'Generated '+S.tagSugs.length+' tags');
+    document.getElementById('apply-tags-btn').disabled=false;
+    log('ok','Tags generated: '+S.tagSugs.length);
+    snack(S.tagSugs.length+' tags ready','success');
+  } catch(err){
+    setSubPb('t',false,'Error');log('err',err.message);snack(err.message,'error');
+  }
+  document.getElementById('primary-btn').disabled=false;
+}
+
+function renderTagSugs(){
+  const c=document.getElementById('tag-sug-container');
+  c.innerHTML=S.tagSugs.map((s,i)=>`<span class="tag-sug ${s.state==='accepted'?'acc':''}" id="ts-${i}" onclick="togTagSug(${i})"><span class="mi material-icons-round">${s.state==='accepted'?'check':'add'}</span>#${e(s.tag)}</span>`).join('');
+  updTagCount();
+}
+
+function togTagSug(i){S.tagSugs[i].state=S.tagSugs[i].state==='accepted'?'pending':'accepted';renderTagSugs();}
+function acceptAllTags(){S.tagSugs.forEach(s=>s.state='accepted');renderTagSugs();}
+function rejectAllTags(){S.tagSugs.forEach(s=>s.state='pending');renderTagSugs();}
+function updTagCount(){const n=S.tagSugs.filter(s=>s.state==='accepted').length;document.getElementById('t-acc').textContent=n+' accepted';}
+
+async function applyTags(){
+  const acc=S.tagSugs.filter(s=>s.state==='accepted').map(s=>s.tag);
+  if(!acc.length){snack('Accept some tags first','error');return;}
+  const file=G('t-mode')==='file'?G('t-file'):''
+  try{
+    await apiPost('/apply_tags',{tags:acc,file});
+    S.stats.tags+=acc.length;saveStats();updateStats();
+    snack(acc.length+' tags applied','success');log('ok','Tags applied: '+acc.join(', '));
+  } catch(err){snack(err.message,'error');log('err',err.message);}
+}
+
+// ─── CALENDAR ─────────────────────────────────────────────────────
+function renderCalendar(){
+  const year=S.calYear, month=S.calMonth;
+  const now=new Date();
+  const label=['January','February','March','April','May','June','July','August','September','October','November','December'][month]+' '+year;
+  document.getElementById('cal-month-label').textContent=label;
+
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrev=new Date(year,month,0).getDate();
+
+  const grid=document.getElementById('cal-grid');
+  let html='';
+
+  // prev month filler
+  for(let i=firstDay-1;i>=0;i--){
+    html+=`<div class="cal-day other-month">${daysInPrev-i}</div>`;
+  }
+
+  // this month
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=year===now.getFullYear()&&month===now.getMonth()&&d===now.getDate();
+    const hasNote=S.calNotes[dateStr]?.note;
+    const hasTask=S.calNotes[dateStr]?.task;
+    html+=`<div class="cal-day ${isToday?'today':''} ${hasNote?'has-note':''} ${hasTask?'has-task':''}" onclick="calDayClick('${dateStr}')" title="${dateStr}">${d}</div>`;
+  }
+
+  // next month filler
+  const total=Math.ceil((firstDay+daysInMonth)/7)*7;
+  for(let d=1;d<=total-firstDay-daysInMonth;d++){
+    html+=`<div class="cal-day other-month">${d}</div>`;
+  }
+
+  grid.innerHTML=html;
+}
+
+function calPrev(){if(S.calMonth===0){S.calMonth=11;S.calYear--;}else S.calMonth--;renderCalendar();}
+function calNext(){if(S.calMonth===11){S.calMonth=0;S.calYear++;}else S.calMonth++;renderCalendar();}
+function calToday(){S.calYear=new Date().getFullYear();S.calMonth=new Date().getMonth();renderCalendar();}
+
+function calDayClick(dateStr){
+  document.getElementById('n-date').value=dateStr;
+  document.getElementById('cal-hint').textContent='Date set to '+dateStr+' — go to Daily Note tab to compose.';
+  goTab('compose',document.querySelector('.nav-item[onclick="goTab(\'compose\',this)"]'));
+}
+
+async function loadCalendar(){
+  log('info','Loading calendar data from vault...');
+  try{
+    const data=await apiGet('/calendar_data',{year:S.calYear,month:S.calMonth+1});
+    S.calNotes=data.days||{};
+    renderCalendar();
+    snack('Calendar synced','success');
+    log('ok','Calendar data loaded');
+  } catch(err){
+    log('warn','Could not load calendar data: '+err.message);
+    snack('Calendar sync requires backend connection','error');
+  }
+}
+
+// ─── TASKS ────────────────────────────────────────────────────────
+async function loadTasks(){
+  log('info','Scanning vault for tasks...');
+  try{
+    const data=await apiGet('/tasks');
+    S.tasks=data.tasks||[];
+    renderTasks('all');
+    snack(S.tasks.length+' tasks found','success');
+    log('ok','Tasks loaded: '+S.tasks.length);
+  } catch(err){
+    log('warn','Could not load tasks: '+err.message);
+    snack('Task scan requires backend connection','error');
+    // show demo tasks
+    S.tasks=getDemoTasks();
+    renderTasks('all');
+  }
+}
+
+function getDemoTasks(){
+  const today=new Date();
+  const fmt=d=>d.toISOString().split('T')[0];
+  const yesterday=new Date(today);yesterday.setDate(today.getDate()-1);
+  const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
+  return [
+    {text:'Review project proposal',due:fmt(tomorrow),priority:'high',done:false,source:'Daily Notes/2025-01-15.md'},
+    {text:'Write unit tests for auth module',due:fmt(today),priority:'medium',done:false,source:'Daily Notes/2025-01-15.md'},
+    {text:'Update README documentation',due:fmt(yesterday),priority:'low',done:false,source:'Projects/Alpha.md'},
+    {text:'Schedule 1:1 with Sarah',due:fmt(tomorrow),priority:'medium',done:false,source:'Daily Notes/2025-01-14.md'},
+    {text:'Read chapter 4 of deep work',due:'',priority:'low',done:false,source:'Ideas/Reading List.md'},
+    {text:'Deploy staging environment',due:fmt(today),priority:'high',done:true,source:'Projects/Alpha.md'},
+  ];
+}
+
+let _taskFilter='all';
+function filterTasks(filter,btn){
+  _taskFilter=filter;
+  document.querySelectorAll('#tasks-filters .btn').forEach(b=>b.classList.remove('primary'));
+  if(btn) btn.classList.add('primary');
+  renderTasks(filter);
+}
+
+function renderTasks(filter){
+  const today=new Date().toISOString().split('T')[0];
+  const soon=new Date();soon.setDate(soon.getDate()+3);const soonStr=soon.toISOString().split('T')[0];
+
+  let tasks=S.tasks;
+  if(filter==='due')     tasks=tasks.filter(t=>t.due&&t.due<=soonStr&&t.due>=today&&!t.done);
+  else if(filter==='overdue') tasks=tasks.filter(t=>t.due&&t.due<today&&!t.done);
+  else if(filter==='high') tasks=tasks.filter(t=>t.priority==='high'&&!t.done);
+  else if(filter==='undated') tasks=tasks.filter(t=>!t.due&&!t.done);
+
+  const el=document.getElementById('tasks-list');
+  if(!tasks.length){el.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px">No tasks match this filter.</div>';return;}
+
+  el.innerHTML=tasks.map((t,i)=>{
+    const dueClass=!t.due?'':t.due<today?'overdue':t.due<=soonStr?'soon':'ok';
+    const priClass=t.priority||'low';
+    return `<div class="task-item ${t.done?'done':''}">
+      <div class="task-cb ${t.done?'checked':''}" onclick="toggleTask(${i})">${t.done?'<span class="mi material-icons-round">check</span>':''}</div>
+      <div style="flex:1">
+        <div class="task-text">${e(t.text)}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:3px">
+          ${t.due?`<span class="task-due ${dueClass}">${t.due}</span>`:''}
+          <span class="task-pri ${priClass}">${t.priority||'low'}</span>
+          <span class="task-meta">${e(t.source||'')}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTask(i){
+  if(!S.tasks[i]) return;
+  S.tasks[i].done=!S.tasks[i].done;
+  renderTasks(_taskFilter);
+}
+
+// ─── PREVIEW ──────────────────────────────────────────────────────
+function dlPreview(){
+  if(!S.lastNote){snack('Nothing to download','error');return;}
+  dlMd(S.lastNote.note,S.lastNote.filename||'daily-note.md');
+}
+function dlIdea(){if(!S.lastIdea) return;dlMd(S.lastIdea.note,S.lastIdea.filename||'idea.md');}
+function dlQuery(){if(!S.lastQuery) return;dlMd(S.lastQuery.answer,'query-result.md');}
+
+function dlMd(content,filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:'text/markdown'}));
+  a.download=filename;a.click();
+}
+
+function copyBox(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(()=>snack('Copied to clipboard','success'));
+}
+
+// ─── HISTORY ──────────────────────────────────────────────────────
+function addHist(item){
+  S.notes.unshift({...item,ts:Date.now()});
+  if(S.notes.length>100) S.notes.pop();
+  localStorage.setItem('nf_notes',JSON.stringify(S.notes));
+  renderHistory();
+}
+
+function renderHistory(){
+  const l=document.getElementById('history-list');
+  document.getElementById('hist-badge').textContent=S.notes.length;
+  if(!S.notes.length){l.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:18px">No notes yet.</div>';return;}
+  const tc={daily:'var(--accent3)',idea:'var(--gold)',query:'var(--cyan)',note:'var(--green)'};
+  l.innerHTML=S.notes.map(n=>`
+    <div class="hist-item">
+      <div class="hist-dot" style="background:${tc[n.type]||'var(--accent)'}"></div>
+      <div class="hist-meta">
+        <div class="hist-title">${e(n.title||n.date||'Untitled')}</div>
+        <div class="hist-sub">${e(n.filename||'—')} &bull; ${n.words||0} words <span class="badge ${n.type||'note'}" style="margin-left:5px">${n.type||'note'}</span></div>
+      </div>
+      <div class="hist-date">${n.date||''}</div>
+    </div>`).join('');
+}
+
+function clearHistory(){if(!confirm('Clear all history?'))return;S.notes=[];localStorage.removeItem('nf_notes');renderHistory();}
+
+// ─── FORM ─────────────────────────────────────────────────────────
+function clearForm(){
+  ['n-title','n-body','n-wins','n-blockers','n-tomorrow','n-links','n-energy','n-extra'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel'));
+  S.tags.compose=[];renderTags('compose');snack('Form cleared','info');
+}
+
+// ─── SYSTEM PROMPTS ────────────────────────────────────────────────
+function resetSysPrompt(ns){
+  if(ns==='compose'){document.getElementById('sp-compose').value=PRESETS.journal;}
+  else if(ns==='idea'){document.getElementById('sp-idea').value=`You are a Zettelkasten note architect. Expand ideas into detailed Markdown notes with mindmaps, wikilinks, callout blocks. YAML frontmatter required. Raw Markdown only.`;}
+}
+
+function loadPreset(key){
+  const el=document.getElementById('sp-compose');
+  if(el&&PRESETS[key]){el.value=PRESETS[key];snack('Preset loaded: '+key,'info');}
+}
+
+// ─── BACKEND ──────────────────────────────────────────────────────
+async function checkBackend(){
+  const cfg=getCfg();
+  log('info','Pinging '+cfg.backend+'/health');
+  try{
+    const res=await fetch(cfg.backend+'/health',{signal:AbortSignal.timeout(3000)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    setBeOnline(true);
+    document.getElementById('model-label').textContent=data.model||getActiveModel();
+    snack('Backend online. AI: '+(data.ai_status||'OK'),'success');
+    log('ok','Health OK. Provider: '+data.provider+' Model: '+data.model);
+  } catch(err){
+    setBeOnline(false);
+    snack('Backend unreachable: '+err.message,'error');
+    log('err','Ping failed: '+err.message);
+  }
+}
+
+async function silentPing(){
+  const cfg=getCfg();
+  try{const res=await fetch(cfg.backend+'/health',{signal:AbortSignal.timeout(2000)});setBeOnline(res.ok);} catch{setBeOnline(false);}
+}
+
+function setBeOnline(on){
+  document.getElementById('be-dot').className='sdot'+(on?'':' off');
+  document.getElementById('be-label').innerHTML=`<span class="sdot${on?'':' off'}"></span> ${on?'Online':'Offline'}`;
+}
+
+async function pingOllama(){
+  const host=G('cfg-ollama-host');
+  try{const r=await fetch(host+'/api/tags',{signal:AbortSignal.timeout(3000)});if(!r.ok)throw new Error('HTTP '+r.status);snack('Ollama reachable at '+host,'success');}
+  catch(err){snack('Ollama unreachable: '+err.message,'error');}
+}
+
+async function listOllamaModels(){
+  const host=G('cfg-ollama-host');
+  try{
+    const r=await fetch(host+'/api/tags',{signal:AbortSignal.timeout(3000)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    const models=(data.models||[]).map(m=>m.name);
+    document.getElementById('ollama-models-list').style.display='';
+    document.getElementById('ollama-models').innerHTML=models.map(m=>`<span class="tag-sug acc" onclick="V('cfg-ollama-model','${m}')" style="cursor:pointer"><span class="mi material-icons-round">memory</span>${m}</span>`).join('');
+    snack(models.length+' models found','success');
+  } catch(err){snack('Could not list models: '+err.message,'error');}
+}
+
+async function pingNvidia(){
+  const key=G('cfg-nvidia-key').trim();
+  if(!key){snack('Enter your NVIDIA API key first','error');return;}
+  try{
+    const r=await fetch('https://api.nvidia.com/v1/models',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(5000)});
+    if(r.ok||r.status===200) snack('NVIDIA API key valid','success');
+    else snack('NVIDIA API returned '+r.status,'error');
+  } catch(err){snack('Could not reach NVIDIA API: '+err.message,'error');}
+}
+
+async function pingOpenAI(){
+  const key=G('cfg-oai-key').trim();
+  const base=G('cfg-oai-base').trim();
+  if(!key){snack('Enter API key first','error');return;}
+  try{
+    const r=await fetch(base+'/models',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(5000)});
+    if(r.ok) snack('API connection successful','success');
+    else snack('API returned '+r.status,'error');
+  } catch(err){snack('Could not reach API: '+err.message,'error');}
+}
+
+// ─── STATS ────────────────────────────────────────────────────────
+function saveStats(){localStorage.setItem('nf_stats',JSON.stringify(S.stats));}
+function updateStats(){
+  document.getElementById('s-total').textContent=S.stats.total;
+  document.getElementById('s-sent').textContent=S.stats.sent;
+  document.getElementById('s-links').textContent=S.stats.links;
+  document.getElementById('s-tags').textContent=S.stats.tags;
+  document.getElementById('s-streak').textContent=S.stats.streak||0;
+  document.getElementById('streak-label').textContent=(S.stats.streak||0)+' days';
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────────────
+function setPb(prefix,active,label){
+  const bar=document.getElementById(prefix+'-pb');
+  const lbl=document.getElementById(prefix+'-plbl');
+  if(!bar||!lbl) return;
+  if(active){bar.classList.add('ind');bar.style.width='';}
+  else{bar.classList.remove('ind');bar.style.width=label.startsWith('Error')?'0%':'100%';setTimeout(()=>{bar.style.width='0%';},2200);}
+  lbl.textContent=label;
+}
+function setSubPb(prefix,active,label){setPb(prefix,active,label);}
+
+// ─── LOG ──────────────────────────────────────────────────────────
+function log(level,msg){
+  const box=document.getElementById('log-box');
+  const t=new Date().toTimeString().split(' ')[0];
+  const cls={info:'li',ok:'lo',warn:'lw',err:'le'}[level]||'li';
+  const tag={info:'[INFO]',ok:'[ OK ]',warn:'[WARN]',err:'[ERR ]'}[level]||'[INFO]';
+  const line=document.createElement('div');
+  line.className='ll';
+  line.innerHTML=`<span class="lt">${t}</span><span class="${cls}">${tag}</span><span>${e(msg)}</span>`;
+  box.appendChild(line);box.scrollTop=box.scrollHeight;
+}
+function clearLogs(){document.getElementById('log-box').innerHTML='';}
+
+// ─── SNACKBAR ─────────────────────────────────────────────────────
+let _st;
+function snack(msg,type='success'){
+  const bar=document.getElementById('snackbar');
+  document.getElementById('snack-icon').textContent=type==='success'?'check_circle':type==='error'?'error':'info';
+  document.getElementById('snack-msg').textContent=msg;
+  bar.className='snackbar show '+type;
+  clearTimeout(_st);_st=setTimeout(()=>{bar.className='snackbar';},3200);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function wc(t){return String(t||'').trim().split(/\s+/).filter(Boolean).length;}
+function slugify(t){return String(t).toLowerCase().replace(/[^\w\s-]/g,'').replace(/[\s_-]+/g,'-').replace(/^-+|-+$/g,'').substring(0,80);}
+function G(id){const el=document.getElementById(id);return el?el.value:'';}
+function V(id,val){const el=document.getElementById(id);if(el)el.value=val;}
+</script>
+</body>
+</html>
